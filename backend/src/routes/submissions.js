@@ -9,6 +9,7 @@ router.post('/run', authenticate, submissionController.runCode);
 // Existing routes
 router.post('/', authenticate, submissionController.submitSolution);
 router.get('/my', authenticate, submissionController.getUserSubmissions);
+router.get('/contest/:contestId/user', authenticate, submissionController.getUserContestSubmissions);
 router.get('/:id', authenticate, submissionController.getSubmissionStatus);
 router.get('/admin/all', authenticate, isAdmin, submissionController.getAllSubmissions);
 

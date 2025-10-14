@@ -176,7 +176,8 @@ exports.registerContest = async (req, res) => {
 // Get contest leaderboard
 exports.getContestLeaderboard = async (req, res) => {
   try {
-    const contest = await Contest.findById(req.params.id);
+    const contest = await Contest.findById(req.params.id)
+      .populate('problems', 'title difficulty');
 
     if (!contest) {
       return res.status(404).json({ error: 'Contest not found' });
@@ -186,27 +187,51 @@ exports.getContestLeaderboard = async (req, res) => {
     const submissions = await Submission.find({
       contestId: contest._id,
       status: 'accepted'
-    }).populate('userId', 'username fullName');
+    })
+      .populate('userId', 'username fullName')
+      .populate('problemId', 'title difficulty');
 
-    // Calculate scores
+    // Calculate scores - each problem solved = 100 points
     const scores = {};
     submissions.forEach(sub => {
+      if (!sub.userId) return;
       const userId = sub.userId._id.toString();
+      const problemId = sub.problemId?._id?.toString();
+      
       if (!scores[userId]) {
         scores[userId] = {
           user: sub.userId,
-          solved: 0,
-          totalTime: 0
+          solvedCount: 0,
+          score: 0,
+          totalTime: 0,
+          solvedProblems: [],
+          solvedProblemIds: new Set()
         };
       }
-      scores[userId].solved++;
+      
+      // Only count each problem once
+      if (problemId && !scores[userId].solvedProblemIds.has(problemId)) {
+        scores[userId].solvedProblemIds.add(problemId);
+        scores[userId].solvedCount++;
+        scores[userId].score += 100; // 100 points per problem
+        scores[userId].solvedProblems.push({
+          problem: sub.problemId,
+          submittedAt: sub.createdAt
+        });
+      }
       scores[userId].totalTime += sub.executionTime || 0;
     });
 
     // Convert to array and sort
     const leaderboard = Object.values(scores)
+      .map(item => {
+        // Remove Set before sending
+        const { solvedProblemIds, ...rest } = item;
+        return rest;
+      })
       .sort((a, b) => {
-        if (b.solved !== a.solved) return b.solved - a.solved;
+        if (b.score !== a.score) return b.score - a.score;
+        if (b.solvedCount !== a.solvedCount) return b.solvedCount - a.solvedCount;
         return a.totalTime - b.totalTime;
       })
       .map((item, index) => ({

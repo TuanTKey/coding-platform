@@ -62,7 +62,8 @@ function AppRoutes() {
         <Route path="/problems" element={<ProtectedRoute><Problems /></ProtectedRoute>} />
         <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
         <Route path="/contests" element={<ProtectedRoute><ContestList /></ProtectedRoute>} />
-        <Route path="/contests/:id" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />  
+        <Route path="/contests/:id" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />
+        <Route path="/contests/:id/leaderboard" element={<ProtectedRoute><ContestLeaderboard /></ProtectedRoute>} />  
         
         {/* Admin Routes */}
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />

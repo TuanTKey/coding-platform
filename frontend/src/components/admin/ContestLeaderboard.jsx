@@ -62,11 +62,11 @@ const ContestLeaderboard = () => {
         {/* Header */}
         <div className="mb-6">
           <Link
-            to="/admin/contests"
+            to={`/contests/${id}`}
             className="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-800 font-semibold mb-4"
           >
             <ArrowLeft size={20} />
-            <span>Quay lại Quản lý Cuộc thi</span>
+            <span>Quay lại Cuộc thi</span>
           </Link>
         </div>
 

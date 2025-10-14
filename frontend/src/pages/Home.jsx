@@ -20,7 +20,9 @@ const Home = () => {
   const fetchContests = async () => {
     try {
       const response = await api.get('/contests');
-      setContests(response.data.slice(0, 3));
+      // API trả về { contests: [...], totalPages, ... }
+      const contestsData = response.data.contests || response.data;
+      setContests(Array.isArray(contestsData) ? contestsData.slice(0, 3) : []);
     } catch (error) {
       console.error('Error fetching contests:', error);
     }
@@ -33,8 +35,8 @@ const Home = () => {
         api.get('/problems')
       ]);
       setStats({
-        totalContests: contestsRes.data.length,
-        totalProblems: problemsRes.data.length,
+        totalContests: contestsRes.data.total || contestsRes.data.contests?.length || 0,
+        totalProblems: problemsRes.data.total || problemsRes.data.problems?.length || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -67,26 +69,25 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
-      {/* Hero Section - Compact */}
-      <div className="relative overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900/50 to-slate-900"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDUpIiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PC9zdmc+')] opacity-30"></div>
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      {/* Hero Section */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700">
+        {/* Pattern overlay */}
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMSkiIHN0cm9rZS13aWR0aD0iMiIvPjwvZz48L3N2Zz4=')] opacity-30"></div>
         
         <div className="relative max-w-6xl mx-auto px-4 py-16 lg:py-20">
           <div className="text-center">
             {/* Logo */}
             <div className="inline-flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-white/20 backdrop-blur rounded-xl flex items-center justify-center">
                 <Code className="w-7 h-7 text-white" />
               </div>
-              <h1 className="text-4xl md:text-5xl font-bold text-white font-mono">
-                Code<span className="text-cyan-400">Judge</span>
+              <h1 className="text-4xl md:text-5xl font-bold text-white">
+                Code<span className="text-cyan-300">Judge</span>
               </h1>
             </div>
             
-            <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto mb-8">
               Nền tảng luyện tập lập trình và thi đấu trực tuyến với AI Judge
             </p>
             
@@ -96,14 +97,14 @@ const Home = () => {
                 <>
                   <Link 
                     to="/register" 
-                    className="group bg-cyan-500 hover:bg-cyan-600 px-6 py-3 rounded-lg font-semibold text-white transition-all flex items-center gap-2 shadow-lg shadow-cyan-500/25"
+                    className="group bg-white hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold text-indigo-600 transition-all flex items-center gap-2 shadow-lg"
                   >
                     Bắt đầu ngay
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </Link>
                   <Link 
                     to="/problems" 
-                    className="border border-slate-600 hover:border-cyan-400 text-slate-300 hover:text-cyan-400 px-6 py-3 rounded-lg font-semibold transition-all"
+                    className="border-2 border-white/50 hover:border-white text-white px-6 py-3 rounded-lg font-semibold transition-all hover:bg-white/10"
                   >
                     Xem bài tập
                   </Link>
@@ -111,7 +112,7 @@ const Home = () => {
               ) : (
                 <Link 
                   to="/problems" 
-                  className="group bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg font-semibold text-white transition-all flex items-center gap-2 shadow-lg shadow-green-500/25"
+                  className="group bg-white hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold text-indigo-600 transition-all flex items-center gap-2 shadow-lg"
                 >
                   Làm bài tập
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -127,10 +128,10 @@ const Home = () => {
                 { icon: Terminal, value: '4+', label: 'Ngôn ngữ' },
                 { icon: Zap, value: '<1s', label: 'Chấm bài' }
               ].map((item, i) => (
-                <div key={i} className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-xl p-4">
-                  <item.icon className="w-5 h-5 text-cyan-400 mx-auto mb-2" />
+                <div key={i} className="bg-white/10 backdrop-blur border border-white/20 rounded-xl p-4">
+                  <item.icon className="w-5 h-5 text-cyan-300 mx-auto mb-2" />
                   <div className="text-2xl font-bold text-white">{item.value}</div>
-                  <div className="text-xs text-slate-400">{item.label}</div>
+                  <div className="text-xs text-blue-200">{item.label}</div>
                 </div>
               ))}
             </div>
@@ -141,19 +142,19 @@ const Home = () => {
       {/* Contests Section */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-400" />
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Trophy className="w-5 h-5 text-amber-500" />
             Cuộc thi
           </h2>
-          <Link to="/contests" className="text-cyan-400 hover:text-cyan-300 text-sm font-medium">
+          <Link to="/contests" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
             Xem tất cả →
           </Link>
         </div>
         
         {contests.length === 0 ? (
-          <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-8 text-center">
-            <Trophy className="w-10 h-10 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">Chưa có cuộc thi nào</p>
+          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+            <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">Chưa có cuộc thi nào</p>
           </div>
         ) : (
           <div className="grid md:grid-cols-3 gap-4">
@@ -163,10 +164,10 @@ const Home = () => {
                 <Link 
                   key={contest._id}
                   to={`/contests/${contest._id}`}
-                  className="group bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50 rounded-xl p-5 transition-all hover:bg-slate-800"
+                  className="group bg-white border border-gray-200 hover:border-indigo-300 rounded-xl p-5 transition-all hover:shadow-lg"
                 >
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-white group-hover:text-cyan-400 transition-colors line-clamp-1">
+                    <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors line-clamp-1">
                       {contest.title}
                     </h3>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge(status)}`}>
@@ -174,7 +175,7 @@ const Home = () => {
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-4 h-4" />
                       {contest.problems?.length || 0} bài
@@ -191,42 +192,42 @@ const Home = () => {
         )}
       </div>
 
-      {/* Features Section - Compact */}
-      <div className="max-w-6xl mx-auto px-4 py-12 border-t border-slate-800">
-        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          <Zap className="w-5 h-5 text-yellow-400" />
+      {/* Features Section */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <Zap className="w-5 h-5 text-yellow-500" />
           Tính năng
         </h2>
         
         <div className="grid md:grid-cols-4 gap-4">
           {[
-            { icon: Terminal, title: 'Code Editor', desc: 'Monaco Editor với syntax highlighting', color: 'text-blue-400' },
-            { icon: Zap, title: 'AI Judge', desc: 'Chấm bài tự động bằng Gemini AI', color: 'text-green-400' },
-            { icon: Trophy, title: 'Cuộc thi', desc: 'Thi đấu và xếp hạng realtime', color: 'text-amber-400' },
-            { icon: Users, title: 'Lớp học', desc: 'Quản lý học sinh và bài tập', color: 'text-purple-400' }
+            { icon: Terminal, title: 'Code Editor', desc: 'Monaco Editor với syntax highlighting', color: 'text-blue-500', bg: 'bg-blue-50' },
+            { icon: Zap, title: 'AI Judge', desc: 'Chấm bài tự động bằng Gemini AI', color: 'text-green-500', bg: 'bg-green-50' },
+            { icon: Trophy, title: 'Cuộc thi', desc: 'Thi đấu và xếp hạng realtime', color: 'text-amber-500', bg: 'bg-amber-50' },
+            { icon: Users, title: 'Lớp học', desc: 'Quản lý học sinh và bài tập', color: 'text-purple-500', bg: 'bg-purple-50' }
           ].map((f, i) => (
-            <div key={i} className="bg-slate-800/30 border border-slate-700 rounded-xl p-4 hover:border-slate-600 transition-colors">
+            <div key={i} className={`${f.bg} border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all`}>
               <f.icon className={`w-8 h-8 ${f.color} mb-3`} />
-              <h3 className="font-semibold text-white mb-1">{f.title}</h3>
-              <p className="text-sm text-slate-400">{f.desc}</p>
+              <h3 className="font-semibold text-gray-800 mb-1">{f.title}</h3>
+              <p className="text-sm text-gray-600">{f.desc}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Footer CTA */}
-      <div className="border-t border-slate-800">
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600">
         <div className="max-w-6xl mx-auto px-4 py-12 text-center">
           <h2 className="text-2xl font-bold text-white mb-4">
             Sẵn sàng bắt đầu?
           </h2>
-          <p className="text-slate-400 mb-6">
+          <p className="text-indigo-100 mb-6">
             Đăng ký ngay để luyện tập và nâng cao kỹ năng lập trình
           </p>
           {!user ? (
             <Link 
               to="/register" 
-              className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 px-8 py-3 rounded-lg font-semibold text-white transition-all shadow-lg shadow-cyan-500/25"
+              className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold text-indigo-600 transition-all shadow-lg"
             >
               Tạo tài khoản miễn phí
               <ChevronRight className="w-4 h-4" />
@@ -234,7 +235,7 @@ const Home = () => {
           ) : (
             <Link 
               to="/problems" 
-              className="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 px-8 py-3 rounded-lg font-semibold text-white transition-all"
+              className="inline-flex items-center gap-2 bg-white hover:bg-gray-100 px-8 py-3 rounded-lg font-semibold text-indigo-600 transition-all shadow-lg"
             >
               Làm bài ngay
               <ChevronRight className="w-4 h-4" />

@@ -6,7 +6,7 @@ const judgeService = require('../services/judgeService');
 // Submit solution
 exports.submitSolution = async (req, res) => {
   try {
-    const { problemId, code, language } = req.body;
+    const { problemId, code, language, contestId } = req.body;
 
     // Validate
     if (!problemId || !code || !language) {
@@ -31,14 +31,21 @@ exports.submitSolution = async (req, res) => {
     }
 
     // Create submission
-    const submission = await Submission.create({
+    const submissionData = {
       userId: req.user.id,
       problemId,
       code,
       language,
       status: 'pending',
       totalTestCases: testCases.length
-    });
+    };
+    
+    // Thêm contestId nếu có
+    if (contestId) {
+      submissionData.contestId = contestId;
+    }
+    
+    const submission = await Submission.create(submissionData);
 
     // Run judge asynchronously
     judgeService.judgeSubmission(submission._id, problem, testCases, code, language);
@@ -118,8 +125,9 @@ exports.getAllSubmissions = async (req, res) => {
     const { page = 1, limit = 50 } = req.query;
 
     const submissions = await Submission.find()
-      .populate('userId', 'username')
-      .populate('problemId', 'title')
+      .populate('userId', 'username fullName class')
+      .populate('problemId', 'title slug')
+      .populate('contestId', 'title')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit);
@@ -134,6 +142,26 @@ exports.getAllSubmissions = async (req, res) => {
     });
   } catch (error) {
     console.error('Get all submissions error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get user's submissions for a specific contest
+exports.getUserContestSubmissions = async (req, res) => {
+  try {
+    const { contestId } = req.params;
+    
+    const submissions = await Submission.find({
+      userId: req.user.id,
+      contestId: contestId
+    })
+      .populate('problemId', 'title slug')
+      .select('problemId status createdAt')
+      .sort({ createdAt: -1 });
+
+    res.json({ submissions });
+  } catch (error) {
+    console.error('Get user contest submissions error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

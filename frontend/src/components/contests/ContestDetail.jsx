@@ -1,21 +1,29 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, Navigate } from 'react-router-dom';
+import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../admin/AuthContext';
 import api from '../../services/api';
-import { Clock, Users, Trophy, Play, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
+import { Clock, Users, Trophy, Send, ArrowLeft, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const ContestDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [contest, setContest] = useState(null);
   const [loading, setLoading] = useState(true);
   const [registering, setRegistering] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [solvedProblems, setSolvedProblems] = useState(new Set());
 
   useEffect(() => {
     fetchContest();
   }, [id]);
+
+  useEffect(() => {
+    if (user && contest) {
+      fetchUserSubmissions();
+    }
+  }, [user, contest]);
 
   const fetchContest = async () => {
     try {
@@ -32,6 +40,25 @@ const ContestDetail = () => {
       alert('Failed to load contest');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserSubmissions = async () => {
+    try {
+      const response = await api.get(`/submissions/contest/${id}/user`);
+      const submissions = response.data.submissions || response.data || [];
+      
+      // Lấy danh sách problem đã Accepted (check cả lowercase và uppercase)
+      const solved = new Set();
+      submissions.forEach(sub => {
+        const status = sub.status?.toLowerCase();
+        if (status === 'accepted' && sub.problemId) {
+          solved.add(sub.problemId._id || sub.problemId);
+        }
+      });
+      setSolvedProblems(solved);
+    } catch (error) {
+      console.error('Error fetching user submissions:', error);
     }
   };
 
@@ -55,6 +82,25 @@ const ContestDetail = () => {
     }
   };
 
+  const handleSubmitContest = () => {
+    const totalProblems = contest.problems?.length || 0;
+    const solvedCount = solvedProblems.size;
+    
+    if (solvedCount === 0) {
+      alert('Bạn chưa hoàn thành bài tập nào!');
+      return;
+    }
+    
+    const confirmMsg = solvedCount < totalProblems 
+      ? `Bạn mới hoàn thành ${solvedCount}/${totalProblems} bài. Bạn có chắc muốn nộp bài thi?`
+      : `Bạn đã hoàn thành ${solvedCount}/${totalProblems} bài. Xác nhận nộp bài thi?`;
+    
+    if (confirm(confirmMsg)) {
+      alert('🎉 Nộp bài thi thành công! Cảm ơn bạn đã tham gia.');
+      navigate(`/contests/${id}/leaderboard`);
+    }
+  };
+
   const getContestStatus = () => {
     if (!contest) return 'loading';
     const now = new Date();
@@ -67,11 +113,15 @@ const ContestDetail = () => {
   };
 
   const canJoin = () => {
-    return getContestStatus() === 'upcoming' && !isRegistered;
+    // Cho phép đăng ký khi cuộc thi sắp diễn ra HOẶC đang diễn ra
+    const status = getContestStatus();
+    return (status === 'upcoming' || status === 'running') && !isRegistered;
   };
 
   const canParticipate = () => {
-    return (getContestStatus() === 'running' || getContestStatus() === 'upcoming') && isRegistered;
+    // Cho phép làm bài khi cuộc thi đang diễn ra (kể cả chưa đăng ký - sẽ tự động đăng ký)
+    const status = getContestStatus();
+    return status === 'running';
   };
 
   if (loading) {
@@ -187,14 +237,14 @@ const ContestDetail = () => {
                   </div>
                 )}
 
-                {status === 'running' && isRegistered && (
-                  <Link
-                    to={`/contests/${contest._id}/solve`}
-                    className="block w-full bg-purple-600 text-white py-3 px-6 rounded-lg hover:bg-purple-700 font-semibold text-center transition-colors"
+                {status === 'running' && (
+                  <button
+                    onClick={handleSubmitContest}
+                    className="w-full bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 font-semibold text-center transition-colors"
                   >
-                    <Play className="inline mr-2" size={20} />
-                    Vào thi ngay
-                  </Link>
+                    <Send className="inline mr-2" size={20} />
+                    Nộp bài thi
+                  </button>
                 )}
 
                 <Link
@@ -220,7 +270,7 @@ const ContestDetail = () => {
         </div>
 
         {/* Problems List */}
-        <div className="bg-white rounded-xl shadow-md p-6">
+        <div id="problems-section" className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Danh sách Bài tập</h2>
           
           {contest.problems && contest.problems.length > 0 ? (
@@ -255,12 +305,38 @@ const ContestDetail = () => {
                   </div>
                   
                   {canParticipate() && (
-                    <Link
-                      to={`/problems/${problem.slug}?contest=${contest._id}`}
-                      className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-semibold transition-colors"
-                    >
-                      Giải bài
-                    </Link>
+                    solvedProblems.has(problem._id) ? (
+                      <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-2 rounded-lg font-semibold">
+                        <CheckCircle size={18} />
+                        Hoàn thành
+                      </div>
+                    ) : (
+                      <Link
+                        to={`/problems/${problem.slug}?contest=${contest._id}`}
+                        onClick={async (e) => {
+                          // Tự động đăng ký nếu chưa đăng ký
+                          if (!isRegistered && user) {
+                            e.preventDefault();
+                            try {
+                              await api.post(`/contests/${id}/register`);
+                              setIsRegistered(true);
+                              // Redirect sau khi đăng ký
+                              window.location.href = `/problems/${problem.slug}?contest=${contest._id}`;
+                            } catch (error) {
+                              if (error.response?.data?.error !== 'Already registered') {
+                                alert('Không thể đăng ký: ' + (error.response?.data?.error || 'Lỗi'));
+                                return;
+                              }
+                              // Đã đăng ký rồi thì vẫn cho vào
+                              window.location.href = `/problems/${problem.slug}?contest=${contest._id}`;
+                            }
+                          }
+                        }}
+                        className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-semibold transition-colors"
+                      >
+                        Giải bài
+                      </Link>
+                    )
                   )}
                 </div>
               ))}

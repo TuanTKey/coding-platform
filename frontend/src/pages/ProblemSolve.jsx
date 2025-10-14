@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import Editor from '@monaco-editor/react';
 import { Play, Clock, Database, AlertCircle, CheckCircle, Terminal as TerminalIcon, X, Send, ChevronUp, ChevronDown, Trash2 } from 'lucide-react';
@@ -7,6 +7,8 @@ import { Play, Clock, Database, AlertCircle, CheckCircle, Terminal as TerminalIc
 const ProblemSolve = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const contestId = searchParams.get('contest'); // Lấy contestId từ URL
   
   const [problem, setProblem] = useState(null);
   const [sampleTestCases, setSampleTestCases] = useState([]);
@@ -219,11 +221,18 @@ const ProblemSolve = () => {
     setResult(null);
 
     try {
-      const response = await api.post('/submissions', {
+      const submitData = {
         problemId: problem._id,
         code: code,
         language: language
-      });
+      };
+      
+      // Nếu đang trong contest, gửi thêm contestId
+      if (contestId) {
+        submitData.contestId = contestId;
+      }
+      
+      const response = await api.post('/submissions', submitData);
 
       const submissionId = response.data.submissionId;
       let pollCount = 0;
@@ -249,6 +258,18 @@ const ProblemSolve = () => {
             });
             
             clearInterval(pollInterval);
+            
+            // Nếu đang trong contest và bài được Accepted, quay lại trang contest sau 2 giây
+            if (contestId && submission.status === 'accepted') {
+              setOutputData(prev => ({
+                ...prev,
+                redirecting: true,
+                redirectMessage: 'Đang chuyển về trang cuộc thi...'
+              }));
+              setTimeout(() => {
+                navigate(`/contests/${contestId}`);
+              }, 2000);
+            }
           }
 
           if (pollCount >= 30) {
@@ -626,6 +647,13 @@ const ProblemSolve = () => {
                         <div className="text-white font-bold">{outputData.memoryUsed || 0}MB</div>
                       </div>
                     </div>
+                    {outputData.redirecting && (
+                      <div className="mt-3 pt-3 border-t border-green-700 text-center">
+                        <div className="text-cyan-400 animate-pulse">
+                          🎉 {outputData.redirectMessage}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
