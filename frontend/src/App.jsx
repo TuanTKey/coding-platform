@@ -12,6 +12,8 @@ import Leaderboard from './pages/Leaderboard';
 // User Pages
 import Problems from './pages/Problems';
 import ProblemSolve from './pages/ProblemSolve';
+import ContestList from './components/contests/ContestList';
+import ContestDetail from './components/contests/ContestDetail';
 
 // Admin Pages
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -20,6 +22,8 @@ import CreateProblem from './components/admin/CreateProblem';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminSubmissions from './components/admin/AdminSubmissions';
 import EditProblem from './components/admin/EditProblem';
+import AdminContests from './components/admin/AdminContests';
+import CreateContest from './components/admin/CreateContest';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -49,6 +53,8 @@ function AppRoutes() {
         {/* User Routes */}
         <Route path="/problems" element={<ProtectedRoute><Problems /></ProtectedRoute>} />
         <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
+        <Route path="/contests" element={<ContestList />} />
+        <Route path="/contests/:id" element={<ContestDetail />} />  
         
         {/* Admin Routes */}
         // Thêm các route admin
@@ -58,6 +64,8 @@ function AppRoutes() {
         <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
         <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/problems/edit/:id" element={<AdminRoute><EditProblem /></AdminRoute>} />
+        <Route path="/admin/contests" element={<AdminRoute><AdminContests /></AdminRoute>} />
+        <Route path="/admin/contests/create" element={<AdminRoute><CreateContest /></AdminRoute>} />
       </Routes>
     </>
   );

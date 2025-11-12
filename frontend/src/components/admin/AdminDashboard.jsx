@@ -22,10 +22,11 @@ const AdminDashboard = () => {
       console.log('🔄 Fetching admin stats...');
       
       // Fetch từ các endpoints
-      const [usersRes, problemsRes, submissionsRes] = await Promise.all([
+      const [usersRes, problemsRes, submissionsRes, contestsRes] = await Promise.all([
         api.get('/users?limit=1&page=1'),
-        api.get('/problems?limit=1&page=1'), 
-        api.get('/submissions/admin/all?limit=10')
+        api.get('/problems?limit=1&page=1'),
+        api.get('/submissions/admin/all?limit=10'),
+        api.get('/contests?limit=1&page=1')
       ]);
 
       console.log('📊 API Responses:', {
@@ -35,10 +36,10 @@ const AdminDashboard = () => {
       });
 
       setStats({
-        totalUsers: usersRes.data.total || usersRes.data.users?.length || 0,
-        totalProblems: problemsRes.data.total || problemsRes.data.problems?.length || 0,
-        totalSubmissions: submissionsRes.data.total || submissionsRes.data.submissions?.length || 0,
-        totalContests: 0,
+        totalUsers: usersRes.data.total || 0,
+        totalProblems: problemsRes.data.total || 0,
+        totalSubmissions: submissionsRes.data.total || 0,
+        totalContests: contestsRes.data.total || 0,
         recentSubmissions: submissionsRes.data.submissions || []
       });
 
@@ -169,9 +170,9 @@ const AdminDashboard = () => {
               </Link>
               <Link
                 to="/admin/contests/create"
-                className="block w-full bg-gradient-to-r from-green-600 to-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transition text-center"
+                className="block w-full bg-gradient-to-r from-orange-600 to-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-orange-700 hover:to-red-700 transition text-center"
               >
-                + Tạo Contest Mới
+                + Tạo Cuộc thi Mới
               </Link>
               <Link
                 to="/admin/users"
