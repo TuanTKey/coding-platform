@@ -137,7 +137,6 @@ exports.getAllSubmissions = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
-// ... existing code ...
 
 // RUN CODE với custom input (không chấm điểm)
 exports.runCode = async (req, res) => {
@@ -153,13 +152,28 @@ exports.runCode = async (req, res) => {
     const { exec } = require('child_process');
     const fs = require('fs').promises;
     const path = require('path');
+    const os = require('os');
 
-    // Language configs
+    // Language configs - FIXED for Windows/Linux compatibility
     const LANG_CONFIG = {
-      python: { ext: 'py', cmd: (f) => `py "${f}"` },
-      javascript: { ext: 'js', cmd: (f) => `node "${f}"` },
-      cpp: { ext: 'cpp', compile: (f) => `g++ "${f}" -o "${f}.exe"`, cmd: (f) => `"${f}.exe"` },
-      java: { ext: 'java', compile: (f) => `javac "${f}"`, cmd: (f) => `java -cp "${path.dirname(f)}" Solution` }
+      python: { 
+        ext: 'py', 
+        cmd: (f) => process.platform === 'win32' ? `python "${f}"` : `python3 "${f}"` 
+      },
+      javascript: { 
+        ext: 'js', 
+        cmd: (f) => `node "${f}"` 
+      },
+      cpp: { 
+        ext: 'cpp', 
+        compile: (f) => `g++ "${f}" -o "${f}.out"`, 
+        cmd: (f) => process.platform === 'win32' ? `"${f}.exe"` : `"${f}.out"` 
+      },
+      java: { 
+        ext: 'java', 
+        compile: (f) => `javac "${f}"`, 
+        cmd: (f) => `java -cp "${path.dirname(f)}" Solution` 
+      }
     };
 
     const config = LANG_CONFIG[language];
@@ -167,18 +181,20 @@ exports.runCode = async (req, res) => {
       return res.status(400).json({ error: 'Unsupported language' });
     }
 
-    // Create temp directory
-    const tempDir = path.join(__dirname, '../../temp', `run_${Date.now()}`);
+    // Create temp directory in system temp folder
+    const tempDir = path.join(os.tmpdir(), `code_runner_${Date.now()}`);
     await fs.mkdir(tempDir, { recursive: true });
 
     const filename = path.join(tempDir, `solution.${config.ext}`);
     await fs.writeFile(filename, code);
 
+    let executablePath = filename;
+
     // Compile if needed
     if (config.compile) {
       const compileCmd = config.compile(filename);
       const compileResult = await new Promise((resolve) => {
-        exec(compileCmd, { cwd: tempDir, timeout: 5000 }, (error, stdout, stderr) => {
+        exec(compileCmd, { cwd: tempDir, timeout: 10000 }, (error, stdout, stderr) => {
           resolve({ error, stdout, stderr });
         });
       });
@@ -190,34 +206,49 @@ exports.runCode = async (req, res) => {
           executionTime: 0
         });
       }
+      
+      // Update executable path for compiled languages
+      if (language === 'cpp') {
+        executablePath = process.platform === 'win32' ? `${filename}.exe` : `${filename}.out`;
+      }
     }
 
     // Run code
     const startTime = Date.now();
-    const runCmd = config.cmd(filename);
+    const runCmd = config.cmd(executablePath);
 
     const runResult = await new Promise((resolve) => {
       const child = exec(runCmd, {
         cwd: tempDir,
-        timeout: 5000,
-        maxBuffer: 10 * 1024 * 1024
+        timeout: 10000, // 10 seconds timeout
+        maxBuffer: 10 * 1024 * 1024 // 10MB buffer
       }, (error, stdout, stderr) => {
         const executionTime = Date.now() - startTime;
         resolve({ error, stdout, stderr, executionTime });
       });
 
       // Send input to stdin
-      if (input) {
-        child.stdin.write(input + '\n');
+      if (input && child.stdin) {
+        child.stdin.write(input);
         child.stdin.end();
       }
     });
 
     // Cleanup
-    await fs.rm(tempDir, { recursive: true, force: true });
+    try {
+      await fs.rm(tempDir, { recursive: true, force: true });
+    } catch (cleanupError) {
+      console.warn('Cleanup warning:', cleanupError);
+    }
 
     // Return result
-    if (runResult.error && !runResult.error.killed) {
+    if (runResult.error) {
+      if (runResult.error.killed) {
+        return res.json({
+          error: 'Time Limit Exceeded (10s)',
+          executionTime: runResult.executionTime
+        });
+      }
       return res.json({
         error: runResult.stderr || runResult.error.message,
         executionTime: runResult.executionTime
@@ -231,6 +262,6 @@ exports.runCode = async (req, res) => {
 
   } catch (error) {
     console.error('Run code error:', error);
-    res.status(500).json({ error: 'Failed to run code' });
+    res.status(500).json({ error: 'Failed to run code: ' + error.message });
   }
 };

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import Editor from '@monaco-editor/react';
-import { Play, Clock, Database, AlertCircle, CheckCircle, Terminal as TerminalIcon, Minimize2, Send } from 'lucide-react';
+import { Play, Clock, Database, AlertCircle, CheckCircle, Terminal as TerminalIcon, Minimize2, Send, Square } from 'lucide-react';
 
 const ProblemSolve = () => {
   const { slug } = useParams();
@@ -22,14 +22,54 @@ const ProblemSolve = () => {
   const [isResizing, setIsResizing] = useState(false);
   const [customInput, setCustomInput] = useState('');
   const [runOutput, setRunOutput] = useState('');
+  const [terminalHistory, setTerminalHistory] = useState([]);
   const terminalRef = useRef(null);
 
-  const languageTemplates = {
-    python: '# Write your solution here\nx = int(input().strip())\n\nif x < 0:\n    print("false")\nelse:\n    s = str(x)\n    if s == s[::-1]:\n        print("true")\n    else:\n        print("false")\n',
-    javascript: '// Write your solution here\nconst readline = require("readline");\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nrl.question("", (input) => {\n  const x = parseInt(input);\n  if (x < 0) {\n    console.log("false");\n  } else {\n    const s = x.toString();\n    console.log(s === s.split("").reverse().join("") ? "true" : "false");\n  }\n  rl.close();\n});\n',
-    cpp: '#include <iostream>\n#include <string>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    int x;\n    cin >> x;\n    \n    if (x < 0) {\n        cout << "false" << endl;\n    } else {\n        string s = to_string(x);\n        string rev = s;\n        reverse(rev.begin(), rev.end());\n        cout << (s == rev ? "true" : "false") << endl;\n    }\n    return 0;\n}\n',
-    java: 'import java.util.Scanner;\n\npublic class Solution {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int x = sc.nextInt();\n        \n        if (x < 0) {\n            System.out.println("false");\n        } else {\n            String s = String.valueOf(x);\n            String rev = new StringBuilder(s).reverse().toString();\n            System.out.println(s.equals(rev) ? "true" : "false");\n        }\n    }\n}\n'
-  };
+const languageTemplates = {
+  python: `# Write your solution here
+s = input().strip()
+reversed_str = s[::-1]
+print(reversed_str)`,
+
+  javascript: `// Write your solution here
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+rl.question('', (input) => {
+  const reversed = input.split('').reverse().join('');
+  console.log(reversed);
+  rl.close();
+});`,
+
+  cpp: `#include <iostream>
+#include <string>
+#include <algorithm>
+using namespace std;
+
+int main() {
+    string s;
+    getline(cin, s);
+    reverse(s.begin(), s.end());
+    cout << s << endl;
+    return 0;
+}`,
+
+  java: `import java.util.Scanner;
+
+public class Solution {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        String input = scanner.nextLine();
+        String reversed = new StringBuilder(input).reverse().toString();
+        System.out.println(reversed);
+        scanner.close();
+    }
+}`
+};
 
   useEffect(() => {
     fetchProblem();
@@ -92,11 +132,18 @@ const ProblemSolve = () => {
 
     setShowTerminal(true);
     setRunning(true);
-    setRunOutput('Running your code...\n');
+    setRunOutput('🚀 Running your code...\n');
     setResult(null);
 
+    // Add to terminal history
+    const newEntry = {
+      type: 'command',
+      content: `$ Running ${language} code...`,
+      timestamp: new Date().toLocaleTimeString()
+    };
+    setTerminalHistory(prev => [...prev, newEntry]);
+
     try {
-      // Gửi request chạy code với custom input
       const response = await api.post('/submissions/run', {
         code: code,
         language: language,
@@ -105,14 +152,25 @@ const ProblemSolve = () => {
 
       console.log('Run response:', response.data);
 
-      if (response.data.output) {
-        setRunOutput(`Input:\n${customInput}\n\nOutput:\n${response.data.output}\n\n✅ Execution completed in ${response.data.executionTime || 0}ms`);
-      } else if (response.data.error) {
-        setRunOutput(`❌ Error:\n${response.data.error}`);
-      }
+      const outputEntry = {
+        type: response.data.error ? 'error' : 'output',
+        content: response.data.error 
+          ? `❌ Execution Error:\n${response.data.error}`
+          : `✅ Execution completed in ${response.data.executionTime || 0}ms\n\nOutput:\n${response.data.output}`,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      
+      setTerminalHistory(prev => [...prev, outputEntry]);
+      setRunOutput(response.data.output || response.data.error);
 
     } catch (error) {
       console.error('Run error:', error);
+      const errorEntry = {
+        type: 'error',
+        content: `❌ Server Error:\n${error.response?.data?.error || error.message || 'Failed to run code'}`,
+        timestamp: new Date().toLocaleTimeString()
+      };
+      setTerminalHistory(prev => [...prev, errorEntry]);
       setRunOutput(`❌ Error:\n${error.response?.data?.error || error.message || 'Failed to run code'}`);
     } finally {
       setRunning(false);
@@ -130,6 +188,14 @@ const ProblemSolve = () => {
     setSubmitting(true);
     setRunOutput('');
     setResult({ status: 'judging', message: 'Submitting your solution for grading...' });
+
+    // Add to terminal history
+    const submitEntry = {
+      type: 'command',
+      content: `$ Submitting solution for grading...`,
+      timestamp: new Date().toLocaleTimeString()
+    };
+    setTerminalHistory(prev => [...prev, submitEntry]);
 
     try {
       const response = await api.post('/submissions', {
@@ -150,6 +216,15 @@ const ProblemSolve = () => {
           if (submission.status !== 'pending' && submission.status !== 'judging') {
             setResult(submission);
             setSubmitting(false);
+            
+            // Add result to terminal history
+            const resultEntry = {
+              type: submission.status === 'accepted' ? 'success' : 'error',
+              content: `📊 Result: ${getStatusText(submission.status)}\nTest Cases: ${submission.testCasesPassed}/${submission.totalTestCases}\nTime: ${submission.executionTime}ms`,
+              timestamp: new Date().toLocaleTimeString()
+            };
+            setTerminalHistory(prev => [...prev, resultEntry]);
+            
             clearInterval(pollInterval);
           }
 
@@ -178,6 +253,12 @@ const ProblemSolve = () => {
         errorMessage: error.response?.data?.error || 'Submission failed' 
       });
     }
+  };
+
+  const clearTerminal = () => {
+    setTerminalHistory([]);
+    setRunOutput('');
+    setResult(null);
   };
 
   const getStatusIcon = (status) => {
@@ -303,7 +384,7 @@ const ProblemSolve = () => {
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
+              className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600 border border-gray-600"
             >
               <option value="python">Python</option>
               <option value="javascript">JavaScript</option>
@@ -314,30 +395,30 @@ const ProblemSolve = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowTerminal(!showTerminal)}
-                className="flex items-center space-x-2 bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-600 text-sm"
+                className="flex items-center space-x-2 bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-600 text-sm border border-gray-600"
               >
                 <TerminalIcon size={16} />
-                <span>{showTerminal ? 'Hide' : 'Show'}</span>
+                <span>{showTerminal ? 'Hide' : 'Show'} Terminal</span>
               </button>
               
               {/* RUN BUTTON */}
               <button
                 onClick={handleRun}
-                disabled={running}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold"
+                disabled={running || submitting}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold border border-blue-500"
               >
-                <Play size={18} />
+                {running ? <Square size={18} /> : <Play size={18} />}
                 <span>{running ? 'Running...' : 'Run'}</span>
               </button>
 
               {/* SUBMIT BUTTON */}
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
-                className="flex items-center space-x-2 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 disabled:opacity-50 font-semibold"
+                disabled={submitting || running}
+                className="flex items-center space-x-2 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 disabled:opacity-50 font-semibold border border-green-500"
               >
                 <Send size={18} />
-                <span>{submitting ? 'Judging...' : 'Submit'}</span>
+                <span>{submitting ? 'Đang chấm...' : 'Nộp bài'}</span>
               </button>
             </div>
           </div>
@@ -359,6 +440,8 @@ const ProblemSolve = () => {
                 lineNumbers: 'on',
                 scrollBeyondLastLine: false,
                 automaticLayout: true,
+                fontFamily: 'Monaco, Menlo, "Courier New", monospace',
+                tabSize: 2,
               }}
             />
           </div>
@@ -381,101 +464,91 @@ const ProblemSolve = () => {
                 <div className="flex items-center space-x-2">
                   <TerminalIcon size={16} className="text-green-400" />
                   <span className="text-white font-semibold text-sm">Terminal</span>
+                  <span className="text-gray-400 text-xs">({language})</span>
                 </div>
-                <button
-                  onClick={() => setShowTerminal(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <Minimize2 size={16} />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={clearTerminal}
+                    className="text-gray-400 hover:text-white text-xs px-2 py-1 hover:bg-gray-700 rounded"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    onClick={() => setShowTerminal(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <Minimize2 size={16} />
+                  </button>
+                </div>
               </div>
 
               {/* Terminal Content */}
               <div className="flex-1 flex overflow-hidden">
                 {/* Input Box */}
                 <div className="w-1/2 border-r border-gray-700 flex flex-col">
-                  <div className="bg-gray-800 px-3 py-2 border-b border-gray-700">
+                  <div className="bg-gray-800 px-3 py-2 border-b border-gray-700 flex justify-between items-center">
                     <span className="text-gray-400 text-xs font-semibold">CUSTOM INPUT</span>
+                    <span className="text-gray-500 text-xs">{customInput.length} chars</span>
                   </div>
                   <textarea
                     value={customInput}
                     onChange={(e) => setCustomInput(e.target.value)}
-                    placeholder="Enter your test input here&#10;Example: 121"
-                    className="flex-1 bg-gray-900 text-gray-300 p-3 font-mono text-sm resize-none focus:outline-none focus:text-white"
+                    placeholder="Enter your test input here&#10;Example: hello"
+                    className="flex-1 bg-gray-900 text-gray-300 p-3 font-mono text-sm resize-none focus:outline-none focus:text-white focus:ring-1 focus:ring-blue-500"
+                    spellCheck={false}
                   />
-                  <div className="bg-gray-800 px-3 py-2 border-t border-gray-700 text-xs text-gray-500">
-                    💡 Tip: Click "Run" to test with this input
+                  <div className="bg-gray-800 px-3 py-2 border-t border-gray-700 text-xs text-gray-500 flex justify-between">
+                    <span>💡 Click "Run" to test with this input</span>
+                    <span className="text-gray-600">Line: {customInput.split('\n').length}</span>
                   </div>
                 </div>
 
                 {/* Output Box */}
                 <div className="w-1/2 flex flex-col">
-                  <div className="bg-gray-800 px-3 py-2 border-b border-gray-700">
+                  <div className="bg-gray-800 px-3 py-2 border-b border-gray-700 flex justify-between items-center">
                     <span className="text-gray-400 text-xs font-semibold">OUTPUT</span>
+                    <span className="text-gray-500 text-xs">{terminalHistory.length} entries</span>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-3 font-mono text-sm">
-                    {/* RUN OUTPUT */}
-                    {runOutput && !result && (
-                      <pre className="text-gray-300 whitespace-pre-wrap">{runOutput}</pre>
-                    )}
-
-                    {/* SUBMIT RESULT */}
-                    {result && (
-                      <div className={`p-3 rounded border ${getStatusColor(result.status)}`}>
-                        <div className="flex items-center space-x-2 mb-2">
-                          {getStatusIcon(result.status)}
-                          <span className="text-white font-bold">
-                            {getStatusText(result.status)}
-                          </span>
+                  <div className="flex-1 overflow-y-auto p-3 font-mono text-sm bg-gray-900">
+                    {/* Terminal History */}
+                    {terminalHistory.length > 0 ? (
+                      <div className="space-y-2">
+                        {terminalHistory.map((entry, index) => (
+                          <div key={index} className={`border-l-2 pl-2 ${
+                            entry.type === 'command' ? 'border-yellow-500 text-yellow-300' :
+                            entry.type === 'error' ? 'border-red-500 text-red-300' :
+                            entry.type === 'success' ? 'border-green-500 text-green-300' :
+                            'border-blue-500 text-blue-300'
+                          }`}>
+                            <div className="flex justify-between text-xs opacity-70 mb-1">
+                              <span>{entry.timestamp}</span>
+                              <span className="uppercase">{entry.type}</span>
+                            </div>
+                            <pre className="whitespace-pre-wrap text-sm">{entry.content}</pre>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      /* EMPTY STATE */
+                      <div className="text-gray-500 text-center py-8 h-full flex items-center justify-center">
+                        <div>
+                          <TerminalIcon size={32} className="mx-auto mb-2 opacity-30" />
+                          <p className="text-sm mb-2">No output yet</p>
+                          <p className="text-xs mb-1">Click <strong className="text-blue-400">Run</strong> to test your code</p>
+                          <p className="text-xs">Click <strong className="text-green-400">Submit</strong> to grade your solution</p>
                         </div>
-
-                        {result.status === 'accepted' ? (
-                          <div className="text-white text-sm">
-                            <p className="mb-2">✨ All test cases passed!</p>
-                            <div className="bg-green-800 bg-opacity-50 p-2 rounded">
-                              <p>📊 Test Cases: {result.testCasesPassed}/{result.totalTestCases}</p>
-                              <p>⏱️ Time: {result.executionTime}ms</p>
-                            </div>
-                            {result.aiAnalysis && (
-                              <div className="mt-2 p-2 bg-green-800 bg-opacity-50 rounded">
-                                <p className="font-semibold">🤖 AI Analysis:</p>
-                                <p className="text-xs mt-1">{result.aiAnalysis}</p>
-                              </div>
-                            )}
-                          </div>
-                        ) : result.status === 'judging' || result.status === 'pending' ? (
-                          <div className="text-white text-sm">
-                            <div className="flex items-center space-x-2">
-                              <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                              <span>{result.message}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="text-white text-sm">
-                            <p className="mb-2">{result.errorMessage || 'Failed'}</p>
-                            {result.testCasesPassed !== undefined && (
-                              <div className="bg-red-800 bg-opacity-50 p-2 rounded mb-2">
-                                <p>📊 Passed: {result.testCasesPassed}/{result.totalTestCases}</p>
-                              </div>
-                            )}
-                            {result.aiAnalysis && (
-                              <div className="mt-2 p-2 bg-red-800 bg-opacity-50 rounded">
-                                <p className="font-semibold">🤖 Feedback:</p>
-                                <p className="text-xs mt-1">{result.aiAnalysis}</p>
-                              </div>
-                            )}
-                          </div>
-                        )}
                       </div>
                     )}
 
-                    {/* EMPTY STATE */}
-                    {!runOutput && !result && (
-                      <div className="text-gray-500 text-center py-8">
-                        <TerminalIcon size={32} className="mx-auto mb-2 opacity-30" />
-                        <p className="text-sm mb-2">No output yet</p>
-                        <p className="text-xs">Click <strong>Run</strong> to test your code</p>
-                        <p className="text-xs">Click <strong>Submit</strong> to grade your solution</p>
+                    {/* Current Running Status */}
+                    {(running || submitting) && (
+                      <div className="border-l-2 border-yellow-500 pl-2 text-yellow-300 mt-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-yellow-500"></div>
+                          <span className="text-sm">
+                            {running ? 'Running your code...' : 'Judging your solution...'}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>

@@ -220,8 +220,14 @@ class JudgeService {
           });
         }
 
-        const actualOutput = stdout.trim();
-        const expected = expectedOutput.trim();
+        // Normalize output: trim and remove extra spaces
+        const actualOutput = stdout.trim().replace(/\r\n/g, '\n');
+        const expected = expectedOutput.trim().replace(/\r\n/g, '\n');
+
+        console.log(`Test case - Input: "${input}"`);
+        console.log(`Expected: "${expected}"`);
+        console.log(`Actual: "${actualOutput}"`);
+        console.log(`Match: ${actualOutput === expected}`);
 
         if (actualOutput === expected) {
           return resolve({ 
@@ -232,7 +238,9 @@ class JudgeService {
         } else {
           return resolve({ 
             status: 'wrong_answer',
-            time: executionTime
+            time: executionTime,
+            expected: expected,
+            actual: actualOutput
           });
         }
       });
