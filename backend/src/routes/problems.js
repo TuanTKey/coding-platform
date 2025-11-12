@@ -12,6 +12,14 @@ router.get('/:id', problemController.getProblemById);
 router.post('/', authenticate, isAdmin, problemController.createProblem);
 router.put('/:id', authenticate, isAdmin, problemController.updateProblem);
 router.delete('/:id', authenticate, isAdmin, problemController.deleteProblem);
+router.get('/stats', authenticate, isAdmin, async (req, res) => {
+  try {
+    const totalProblems = await Problem.countDocuments();
+    res.json({ totalProblems });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Test cases routes (admin only)
 router.get('/:id/testcases', authenticate, isAdmin, problemController.getTestCases);

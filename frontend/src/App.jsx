@@ -19,6 +19,7 @@ import AdminProblems from './components/admin/AdminProblems';
 import CreateProblem from './components/admin/CreateProblem';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminSubmissions from './components/admin/AdminSubmissions';
+import EditProblem from './components/admin/EditProblem';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -50,11 +51,13 @@ function AppRoutes() {
         <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
         
         {/* Admin Routes */}
+        // Thêm các route admin
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/admin/problems" element={<AdminRoute><AdminProblems /></AdminRoute>} />
         <Route path="/admin/problems/create" element={<AdminRoute><CreateProblem /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+        <Route path="/admin/problems/edit/:id" element={<AdminRoute><EditProblem /></AdminRoute>} />
       </Routes>
     </>
   );

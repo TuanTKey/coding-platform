@@ -266,3 +266,34 @@ exports.deleteTestCase = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+// Update problem
+exports.updateProblem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // Check if problem exists
+    const existingProblem = await Problem.findById(id);
+    if (!existingProblem) {
+      return res.status(404).json({ error: 'Problem not found' });
+    }
+
+    // Update problem
+    const updatedProblem = await Problem.findByIdAndUpdate(
+      id,
+      { 
+        ...updateData,
+        updatedAt: Date.now()
+      },
+      { new: true, runValidators: true }
+    );
+
+    res.json({
+      message: 'Problem updated successfully',
+      problem: updatedProblem
+    });
+  } catch (error) {
+    console.error('Update problem error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
