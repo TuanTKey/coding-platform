@@ -13,5 +13,6 @@ router.post('/:id/register', authenticate, contestController.registerContest);
 
 // Admin routes
 router.post('/', authenticate, isAdmin, contestController.createContest);
+router.put('/:id', authenticate, isAdmin, contestController.updateContest);
 
 module.exports = router;

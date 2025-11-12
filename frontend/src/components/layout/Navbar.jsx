@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../admin/AuthContext';
 import { Code2, Trophy, BarChart3, LogOut, Shield, Home, FileCode } from 'lucide-react';
 
 const Navbar = () => {

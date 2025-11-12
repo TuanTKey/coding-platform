@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../admin/AuthContext';
 import api from '../../services/api';
 import { Clock, Users, Trophy, Play, ArrowLeft, CheckCircle, XCircle } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';

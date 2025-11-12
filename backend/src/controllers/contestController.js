@@ -89,6 +89,48 @@ exports.createContest = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+// Update contest (admin only) - THÊM FUNCTION NÀY
+exports.updateContest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      description,
+      startTime,
+      endTime,
+      duration,
+      problems,
+      rules,
+      isPublic
+    } = req.body;
+
+    const contest = await Contest.findById(id);
+
+    if (!contest) {
+      return res.status(404).json({ error: 'Contest not found' });
+    }
+
+    // Update fields
+    if (title !== undefined) contest.title = title;
+    if (description !== undefined) contest.description = description;
+    if (startTime !== undefined) contest.startTime = startTime;
+    if (endTime !== undefined) contest.endTime = endTime;
+    if (duration !== undefined) contest.duration = duration;
+    if (problems !== undefined) contest.problems = problems;
+    if (rules !== undefined) contest.rules = rules;
+    if (isPublic !== undefined) contest.isPublic = isPublic;
+
+    await contest.save();
+
+    res.json({
+      message: 'Contest updated successfully',
+      contest
+    });
+  } catch (error) {
+    console.error('Update contest error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 // Register for contest
 exports.registerContest = async (req, res) => {

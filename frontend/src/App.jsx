@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider, useAuth } from './components/admin/AuthContext';
 import Navbar from './components/layout/Navbar';
 import AdminRoute from './components/admin/AdminRoute';
 
@@ -23,7 +23,9 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminSubmissions from './components/admin/AdminSubmissions';
 import EditProblem from './components/admin/EditProblem';
 import AdminContests from './components/admin/AdminContests';
-import CreateContest from './components/admin/CreateContest';
+import CreateContest from './context/CreateContest';
+import EditContest from './components/admin/EditContest';
+import ContestLeaderboard from './components/admin/ContestLeaderboard';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -66,6 +68,8 @@ function AppRoutes() {
         <Route path="/admin/problems/edit/:id" element={<AdminRoute><EditProblem /></AdminRoute>} />
         <Route path="/admin/contests" element={<AdminRoute><AdminContests /></AdminRoute>} />
         <Route path="/admin/contests/create" element={<AdminRoute><CreateContest /></AdminRoute>} />
+        <Route path="/admin/contests/edit/:id" element={<AdminRoute><EditContest /></AdminRoute>} />
+        <Route path="/admin/contests/:id/leaderboard" element={<AdminRoute><ContestLeaderboard /></AdminRoute>} />
       </Routes>
     </>
   );

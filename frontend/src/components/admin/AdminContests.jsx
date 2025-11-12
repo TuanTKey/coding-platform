@@ -226,19 +226,20 @@ const AdminContests = () => {
                         >
                           <Eye size={18} />
                         </Link>
+                        
                         <Link
-                          to={`/admin/contests/edit/${contest._id}`}
-                          className="text-green-600 hover:text-green-800"
-                          title="Chỉnh sửa"
+                        to={`/admin/contests/edit/${contest._id}`}
+                        className="text-green-600 hover:text-green-800"
+                        title="Chỉnh sửa"
                         >
-                          <Edit size={18} />
+                        <Edit size={18} />
                         </Link>
                         <Link
-                          to={`/contests/${contest._id}/leaderboard`}
-                          className="text-purple-600 hover:text-purple-800"
-                          title="Bảng xếp hạng"
+                        to={`/admin/contests/${contest._id}/leaderboard`}
+                        className="text-purple-600 hover:text-purple-800"
+                        title="Bảng xếp hạng"
                         >
-                          <Trophy size={18} />
+                        <Trophy size={18} />
                         </Link>
                         <button
                           onClick={() => handleDelete(contest._id)}
