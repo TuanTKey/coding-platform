@@ -5,7 +5,6 @@ const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 const hpp = require("hpp");
-const xss = require("xss-clean");
 const connectDB = require("./src/config/database");
 
 dotenv.config();
@@ -17,7 +16,6 @@ connectDB();
 
 // Security middleware
 app.use(helmet()); // Set security HTTP headers
-app.use(xss()); // Prevent XSS attacks
 app.use(hpp()); // Prevent HTTP Parameter Pollution
 
 // Rate limiting

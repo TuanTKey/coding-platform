@@ -13,30 +13,33 @@ const LANGUAGE_CONFIG = {
     compileCmd: null,
     runCmd: (filename) => {
       if (process.platform === 'win32') {
-        return `py ${filename}`;
+        return `py "${filename}"`;
       }
-      return `python3 ${filename}`;
+      return `python3 "${filename}"`;
     }
   },
   javascript: {
     extension: 'js',
     compileCmd: null,
-    runCmd: (filename) => `node ${filename}`
+    runCmd: (filename) => `node "${filename}"`
   },
   cpp: {
     extension: 'cpp',
-    compileCmd: (filename) => `g++ ${filename} -o ${filename}.out`,
+    compileCmd: (filename) => `g++ "${filename}" -o "${filename}.out"`,
     runCmd: (filename) => {
       if (process.platform === 'win32') {
-        return `${filename}.exe`;
+        return `"${filename}.exe"`;
       }
-      return `./${filename}.out`;
+      return `"${filename}.out"`;
     }
   },
   java: {
     extension: 'java',
-    compileCmd: (filename) => `javac ${filename}`,
-    runCmd: (filename) => `java ${path.basename(filename, '.java')}`
+    compileCmd: (filename) => `javac "${filename}"`,
+    runCmd: (filename) => {
+      const className = path.basename(filename, '.java');
+      return `java -cp "${path.dirname(filename)}" ${className}`;
+    }
   }
 };
 
