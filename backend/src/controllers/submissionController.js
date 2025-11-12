@@ -137,3 +137,100 @@ exports.getAllSubmissions = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+// ... existing code ...
+
+// RUN CODE với custom input (không chấm điểm)
+exports.runCode = async (req, res) => {
+  try {
+    const { code, language, input } = req.body;
+
+    if (!code || !language) {
+      return res.status(400).json({ error: 'Code and language are required' });
+    }
+
+    console.log('🏃 Running code with custom input...');
+
+    const { exec } = require('child_process');
+    const fs = require('fs').promises;
+    const path = require('path');
+
+    // Language configs
+    const LANG_CONFIG = {
+      python: { ext: 'py', cmd: (f) => `py "${f}"` },
+      javascript: { ext: 'js', cmd: (f) => `node "${f}"` },
+      cpp: { ext: 'cpp', compile: (f) => `g++ "${f}" -o "${f}.exe"`, cmd: (f) => `"${f}.exe"` },
+      java: { ext: 'java', compile: (f) => `javac "${f}"`, cmd: (f) => `java -cp "${path.dirname(f)}" Solution` }
+    };
+
+    const config = LANG_CONFIG[language];
+    if (!config) {
+      return res.status(400).json({ error: 'Unsupported language' });
+    }
+
+    // Create temp directory
+    const tempDir = path.join(__dirname, '../../temp', `run_${Date.now()}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    const filename = path.join(tempDir, `solution.${config.ext}`);
+    await fs.writeFile(filename, code);
+
+    // Compile if needed
+    if (config.compile) {
+      const compileCmd = config.compile(filename);
+      const compileResult = await new Promise((resolve) => {
+        exec(compileCmd, { cwd: tempDir, timeout: 5000 }, (error, stdout, stderr) => {
+          resolve({ error, stdout, stderr });
+        });
+      });
+
+      if (compileResult.error) {
+        await fs.rm(tempDir, { recursive: true, force: true });
+        return res.json({
+          error: compileResult.stderr || 'Compilation error',
+          executionTime: 0
+        });
+      }
+    }
+
+    // Run code
+    const startTime = Date.now();
+    const runCmd = config.cmd(filename);
+
+    const runResult = await new Promise((resolve) => {
+      const child = exec(runCmd, {
+        cwd: tempDir,
+        timeout: 5000,
+        maxBuffer: 10 * 1024 * 1024
+      }, (error, stdout, stderr) => {
+        const executionTime = Date.now() - startTime;
+        resolve({ error, stdout, stderr, executionTime });
+      });
+
+      // Send input to stdin
+      if (input) {
+        child.stdin.write(input + '\n');
+        child.stdin.end();
+      }
+    });
+
+    // Cleanup
+    await fs.rm(tempDir, { recursive: true, force: true });
+
+    // Return result
+    if (runResult.error && !runResult.error.killed) {
+      return res.json({
+        error: runResult.stderr || runResult.error.message,
+        executionTime: runResult.executionTime
+      });
+    }
+
+    res.json({
+      output: runResult.stdout,
+      executionTime: runResult.executionTime
+    });
+
+  } catch (error) {
+    console.error('Run code error:', error);
+    res.status(500).json({ error: 'Failed to run code' });
+  }
+};

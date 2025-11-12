@@ -13,19 +13,20 @@ const ProblemSolve = () => {
   const [code, setCode] = useState('');
   const [language, setLanguage] = useState('python');
   const [submitting, setSubmitting] = useState(false);
+  const [running, setRunning] = useState(false);
   const [result, setResult] = useState(null);
   
-  // Terminal & Input state
+  // Terminal state
   const [showTerminal, setShowTerminal] = useState(true);
   const [terminalHeight, setTerminalHeight] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
   const [customInput, setCustomInput] = useState('');
-  const [showInputBox, setShowInputBox] = useState(true);
+  const [runOutput, setRunOutput] = useState('');
   const terminalRef = useRef(null);
 
   const languageTemplates = {
-    python: '# Write your solution here\nx = int(input().strip())\n\n# Số âm không phải palindrome\nif x < 0:\n    print("false")\nelse:\n    s = str(x)\n    if s == s[::-1]:\n        print("true")\n    else:\n        print("false")\n',
-    javascript: '// Write your solution here\nconst input = require("fs").readFileSync(0, "utf-8").trim();\nconst x = parseInt(input);\n\nif (x < 0) {\n    console.log("false");\n} else {\n    const s = x.toString();\n    console.log(s === s.split("").reverse().join("") ? "true" : "false");\n}\n',
+    python: '# Write your solution here\nx = int(input().strip())\n\nif x < 0:\n    print("false")\nelse:\n    s = str(x)\n    if s == s[::-1]:\n        print("true")\n    else:\n        print("false")\n',
+    javascript: '// Write your solution here\nconst readline = require("readline");\nconst rl = readline.createInterface({\n  input: process.stdin,\n  output: process.stdout\n});\n\nrl.question("", (input) => {\n  const x = parseInt(input);\n  if (x < 0) {\n    console.log("false");\n  } else {\n    const s = x.toString();\n    console.log(s === s.split("").reverse().join("") ? "true" : "false");\n  }\n  rl.close();\n});\n',
     cpp: '#include <iostream>\n#include <string>\n#include <algorithm>\nusing namespace std;\n\nint main() {\n    int x;\n    cin >> x;\n    \n    if (x < 0) {\n        cout << "false" << endl;\n    } else {\n        string s = to_string(x);\n        string rev = s;\n        reverse(rev.begin(), rev.end());\n        cout << (s == rev ? "true" : "false") << endl;\n    }\n    return 0;\n}\n',
     java: 'import java.util.Scanner;\n\npublic class Solution {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        int x = sc.nextInt();\n        \n        if (x < 0) {\n            System.out.println("false");\n        } else {\n            String s = String.valueOf(x);\n            String rev = new StringBuilder(s).reverse().toString();\n            System.out.println(s.equals(rev) ? "true" : "false");\n        }\n    }\n}\n'
   };
@@ -72,7 +73,6 @@ const ProblemSolve = () => {
       setSampleTestCases(response.data.sampleTestCases);
       setCode(languageTemplates[language]);
       
-      // Set default input từ sample test case đầu tiên
       if (response.data.sampleTestCases.length > 0) {
         setCustomInput(response.data.sampleTestCases[0].input);
       }
@@ -83,6 +83,43 @@ const ProblemSolve = () => {
     }
   };
 
+  // RUN CODE LOCALLY (test với input tự nhập)
+  const handleRun = async () => {
+    if (!code.trim()) {
+      alert('Please write some code first!');
+      return;
+    }
+
+    setShowTerminal(true);
+    setRunning(true);
+    setRunOutput('Running your code...\n');
+    setResult(null);
+
+    try {
+      // Gửi request chạy code với custom input
+      const response = await api.post('/submissions/run', {
+        code: code,
+        language: language,
+        input: customInput
+      });
+
+      console.log('Run response:', response.data);
+
+      if (response.data.output) {
+        setRunOutput(`Input:\n${customInput}\n\nOutput:\n${response.data.output}\n\n✅ Execution completed in ${response.data.executionTime || 0}ms`);
+      } else if (response.data.error) {
+        setRunOutput(`❌ Error:\n${response.data.error}`);
+      }
+
+    } catch (error) {
+      console.error('Run error:', error);
+      setRunOutput(`❌ Error:\n${error.response?.data?.error || error.message || 'Failed to run code'}`);
+    } finally {
+      setRunning(false);
+    }
+  };
+
+  // SUBMIT CODE (chấm điểm chính thức)
   const handleSubmit = async () => {
     if (!code.trim()) {
       alert('Please write some code first!');
@@ -91,7 +128,8 @@ const ProblemSolve = () => {
 
     setShowTerminal(true);
     setSubmitting(true);
-    setResult({ status: 'judging', message: 'Submitting your solution...' });
+    setRunOutput('');
+    setResult({ status: 'judging', message: 'Submitting your solution for grading...' });
 
     try {
       const response = await api.post('/submissions', {
@@ -276,15 +314,27 @@ const ProblemSolve = () => {
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowTerminal(!showTerminal)}
-                className="flex items-center space-x-2 bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-600"
+                className="flex items-center space-x-2 bg-gray-700 text-white px-3 py-2 rounded hover:bg-gray-600 text-sm"
               >
-                <TerminalIcon size={18} />
-                <span>{showTerminal ? 'Hide' : 'Show'} Output</span>
+                <TerminalIcon size={16} />
+                <span>{showTerminal ? 'Hide' : 'Show'}</span>
               </button>
+              
+              {/* RUN BUTTON */}
+              <button
+                onClick={handleRun}
+                disabled={running}
+                className="flex items-center space-x-2 bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700 disabled:opacity-50 font-semibold"
+              >
+                <Play size={18} />
+                <span>{running ? 'Running...' : 'Run'}</span>
+              </button>
+
+              {/* SUBMIT BUTTON */}
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
-                className="flex items-center space-x-2 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 disabled:opacity-50"
+                className="flex items-center space-x-2 bg-green-600 text-white px-5 py-2 rounded hover:bg-green-700 disabled:opacity-50 font-semibold"
               >
                 <Send size={18} />
                 <span>{submitting ? 'Judging...' : 'Submit'}</span>
@@ -328,17 +378,9 @@ const ProblemSolve = () => {
               
               {/* Terminal Header */}
               <div className="flex items-center justify-between bg-gray-800 px-4 py-2 border-b border-gray-700">
-                <div className="flex items-center space-x-4">
-                  <div className="flex items-center space-x-2">
-                    <TerminalIcon size={16} className="text-green-400" />
-                    <span className="text-white font-semibold text-sm">Input/Output</span>
-                  </div>
-                  <button
-                    onClick={() => setShowInputBox(!showInputBox)}
-                    className="text-sm text-gray-400 hover:text-white"
-                  >
-                    {showInputBox ? 'Hide' : 'Show'} Input
-                  </button>
+                <div className="flex items-center space-x-2">
+                  <TerminalIcon size={16} className="text-green-400" />
+                  <span className="text-white font-semibold text-sm">Terminal</span>
                 </div>
                 <button
                   onClick={() => setShowTerminal(false)}
@@ -351,27 +393,34 @@ const ProblemSolve = () => {
               {/* Terminal Content */}
               <div className="flex-1 flex overflow-hidden">
                 {/* Input Box */}
-                {showInputBox && (
-                  <div className="w-1/2 border-r border-gray-700 flex flex-col">
-                    <div className="bg-gray-800 px-3 py-2 border-b border-gray-700">
-                      <span className="text-gray-400 text-xs font-semibold">INPUT</span>
-                    </div>
-                    <textarea
-                      value={customInput}
-                      onChange={(e) => setCustomInput(e.target.value)}
-                      placeholder="Enter input here (one per line)&#10;Example: 121"
-                      className="flex-1 bg-gray-900 text-white p-3 font-mono text-sm resize-none focus:outline-none"
-                    />
+                <div className="w-1/2 border-r border-gray-700 flex flex-col">
+                  <div className="bg-gray-800 px-3 py-2 border-b border-gray-700">
+                    <span className="text-gray-400 text-xs font-semibold">CUSTOM INPUT</span>
                   </div>
-                )}
+                  <textarea
+                    value={customInput}
+                    onChange={(e) => setCustomInput(e.target.value)}
+                    placeholder="Enter your test input here&#10;Example: 121"
+                    className="flex-1 bg-gray-900 text-gray-300 p-3 font-mono text-sm resize-none focus:outline-none focus:text-white"
+                  />
+                  <div className="bg-gray-800 px-3 py-2 border-t border-gray-700 text-xs text-gray-500">
+                    💡 Tip: Click "Run" to test with this input
+                  </div>
+                </div>
 
                 {/* Output Box */}
-                <div className={`${showInputBox ? 'w-1/2' : 'w-full'} flex flex-col`}>
+                <div className="w-1/2 flex flex-col">
                   <div className="bg-gray-800 px-3 py-2 border-b border-gray-700">
                     <span className="text-gray-400 text-xs font-semibold">OUTPUT</span>
                   </div>
                   <div className="flex-1 overflow-y-auto p-3 font-mono text-sm">
-                    {result ? (
+                    {/* RUN OUTPUT */}
+                    {runOutput && !result && (
+                      <pre className="text-gray-300 whitespace-pre-wrap">{runOutput}</pre>
+                    )}
+
+                    {/* SUBMIT RESULT */}
+                    {result && (
                       <div className={`p-3 rounded border ${getStatusColor(result.status)}`}>
                         <div className="flex items-center space-x-2 mb-2">
                           {getStatusIcon(result.status)}
@@ -398,7 +447,7 @@ const ProblemSolve = () => {
                           <div className="text-white text-sm">
                             <div className="flex items-center space-x-2">
                               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                              <span>Processing...</span>
+                              <span>{result.message}</span>
                             </div>
                           </div>
                         ) : (
@@ -418,11 +467,15 @@ const ProblemSolve = () => {
                           </div>
                         )}
                       </div>
-                    ) : (
+                    )}
+
+                    {/* EMPTY STATE */}
+                    {!runOutput && !result && (
                       <div className="text-gray-500 text-center py-8">
                         <TerminalIcon size={32} className="mx-auto mb-2 opacity-30" />
-                        <p className="text-sm">Click Submit to see output</p>
-                        <p className="text-xs mt-1">Tip: Edit input on the left to test</p>
+                        <p className="text-sm mb-2">No output yet</p>
+                        <p className="text-xs">Click <strong>Run</strong> to test your code</p>
+                        <p className="text-xs">Click <strong>Submit</strong> to grade your solution</p>
                       </div>
                     )}
                   </div>
