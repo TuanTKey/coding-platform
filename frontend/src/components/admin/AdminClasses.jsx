@@ -17,6 +17,7 @@ const AdminClasses = () => {
     description: '',
     teacherId: ''
   });
+  const [error, setError] = useState('');
 
   useEffect(() => {
     fetchClasses();
@@ -26,35 +27,65 @@ const AdminClasses = () => {
   const fetchClasses = async () => {
     try {
       setLoading(true);
-      const [classesRes, statsRes] = await Promise.all([
-        api.get('/users/classes/all'),
-        api.get('/submissions/admin/all?limit=1000')
-      ]);
+      setError('');
+      console.log('🔄 Fetching classes...');
+      
+      const classesRes = await api.get('/users/classes/all');
+      console.log('📚 Classes response:', classesRes.data);
+      
+      // ĐẢM BẢO classesList KHÔNG CÓ NULL/UNDEFINED
+      const classesList = (classesRes.data.classes || [])
+        .filter(className => className && typeof className === 'string')
+        .sort();
+      
+      console.log('✅ Filtered classes:', classesList);
 
-      const classesList = classesRes.data.classes || [];
-      const submissions = statsRes.data.submissions || [];
+      // TÍNH TOÁN THỦ CÔNG VÌ API STATS CÓ THỂ CHƯA CÓ
+      try {
+        const submissionsRes = await api.get('/submissions/admin/all?limit=1000');
+        const submissions = submissionsRes.data.submissions || [];
+        console.log('📊 Submissions count:', submissions.length);
 
-      // Tính toán thống kê cho từng lớp
-      const stats = {};
-      classesList.forEach(className => {
-        const classSubmissions = submissions.filter(sub => sub.userId?.class === className);
-        const acceptedSubmissions = classSubmissions.filter(sub => sub.status === 'accepted');
-        const uniqueStudents = new Set(classSubmissions.map(sub => sub.userId?._id)).size;
+        const stats = {};
+        classesList.forEach(className => {
+          const classSubmissions = submissions.filter(sub => 
+            sub.userId?.class === className
+          );
+          const acceptedSubmissions = classSubmissions.filter(sub => 
+            sub.status === 'accepted'
+          );
+          const uniqueStudents = new Set(
+            classSubmissions.map(sub => sub.userId?._id).filter(id => id)
+          ).size;
+          
+          stats[className] = {
+            totalSubmissions: classSubmissions.length,
+            acceptedSubmissions: acceptedSubmissions.length,
+            uniqueStudents,
+            acceptanceRate: classSubmissions.length > 0 ? 
+              ((acceptedSubmissions.length / classSubmissions.length) * 100).toFixed(1) : 0,
+            solvedProblems: new Set(
+              acceptedSubmissions.map(sub => sub.problemId?._id).filter(id => id)
+            ).size
+          };
+        });
+
+        setClasses(classesList);
+        setClassStats(stats);
+        console.log('✅ Classes loaded:', classesList);
+        console.log('📈 Stats calculated:', stats);
         
-        stats[className] = {
-          totalSubmissions: classSubmissions.length,
-          acceptedSubmissions: acceptedSubmissions.length,
-          uniqueStudents,
-          acceptanceRate: classSubmissions.length > 0 ? 
-            ((acceptedSubmissions.length / classSubmissions.length) * 100).toFixed(1) : 0,
-          solvedProblems: new Set(acceptedSubmissions.map(sub => sub.problemId?._id)).size
-        };
-      });
+      } catch (statsError) {
+        console.error('❌ Error calculating stats:', statsError);
+        // Fallback: chỉ set classes không có stats
+        setClasses(classesList);
+        setClassStats({});
+      }
 
-      setClasses(classesList);
-      setClassStats(stats);
     } catch (error) {
-      console.error('Error fetching classes:', error);
+      console.error('❌ Error fetching classes:', error);
+      setError('Không thể tải danh sách lớp học');
+      setClasses([]);
     } finally {
       setLoading(false);
     }
@@ -62,59 +93,65 @@ const AdminClasses = () => {
 
   const fetchTeachers = async () => {
     try {
+      console.log('🔄 Fetching teachers...');
       const response = await api.get('/users/admin/teachers');
+      console.log('👨‍🏫 Teachers response:', response.data);
       setTeachers(response.data.teachers || []);
     } catch (error) {
-      console.error('Error fetching teachers:', error);
+      console.error('❌ Error fetching teachers:', error);
+      setTeachers([]);
     }
   };
 
-    const handleCreateClass = async (e) => {
+  const handleCreateClass = async (e) => {
     e.preventDefault();
     try {
-        // SỬA ĐƯỜNG DẪN API
-        await api.post('/admin/classes', formData);
-        alert('Tạo lớp thành công!');
-        setShowCreateModal(false);
-        setFormData({ name: '', description: '', teacherId: '' });
-        fetchClasses();
+      console.log('🔄 Creating class:', formData);
+      const response = await api.post('/admin/classes', formData);
+      console.log('✅ Class created:', response.data);
+      alert('Tạo lớp thành công!');
+      setShowCreateModal(false);
+      setFormData({ name: '', description: '', teacherId: '' });
+      fetchClasses();
     } catch (error) {
-        console.error('Error creating class:', error);
-        alert(error.response?.data?.error || 'Không thể tạo lớp');
+      console.error('❌ Error creating class:', error);
+      alert(error.response?.data?.error || 'Không thể tạo lớp');
     }
-    };
+  };
 
-    const handleEditClass = async (e) => {
+  const handleEditClass = async (e) => {
     e.preventDefault();
     try {
-        // SỬA ĐƯỜNG DẪN API
-        await api.put(`/admin/classes/${selectedClass}`, formData);
-        alert('Cập nhật lớp thành công!');
-        setShowEditModal(false);
-        setSelectedClass(null);
-        setFormData({ name: '', description: '', teacherId: '' });
-        fetchClasses();
+      console.log('🔄 Updating class:', selectedClass, formData);
+      const response = await api.put(`/admin/classes/${selectedClass}`, formData);
+      console.log('✅ Class updated:', response.data);
+      alert('Cập nhật lớp thành công!');
+      setShowEditModal(false);
+      setSelectedClass(null);
+      setFormData({ name: '', description: '', teacherId: '' });
+      fetchClasses();
     } catch (error) {
-        console.error('Error updating class:', error);
-        alert(error.response?.data?.error || 'Không thể cập nhật lớp');
+      console.error('❌ Error updating class:', error);
+      alert(error.response?.data?.error || 'Không thể cập nhật lớp');
     }
-    };
+  };
 
-    const handleDeleteClass = async (className) => {
+  const handleDeleteClass = async (className) => {
     if (!window.confirm(`Bạn có chắc muốn xóa lớp ${className}?`)) {
-        return;
+      return;
     }
 
     try {
-        // SỬA ĐƯỜNG DẪN API
-        await api.delete(`/admin/classes/${className}`);
-        alert('Xóa lớp thành công!');
-        fetchClasses();
+      console.log('🔄 Deleting class:', className);
+      const response = await api.delete(`/admin/classes/${className}`);
+      console.log('✅ Class deleted:', response.data);
+      alert('Xóa lớp thành công!');
+      fetchClasses();
     } catch (error) {
-        console.error('Error deleting class:', error);
-        alert(error.response?.data?.error || 'Không thể xóa lớp');
+      console.error('❌ Error deleting class:', error);
+      alert(error.response?.data?.error || 'Không thể xóa lớp');
     }
-    };
+  };
 
   const openEditModal = (className) => {
     setSelectedClass(className);
@@ -126,9 +163,11 @@ const AdminClasses = () => {
     setShowEditModal(true);
   };
 
-  const filteredClasses = classes.filter(className =>
-    className.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // SỬA PHẦN FILTER - THÊM KIỂM TRA NULL
+  const filteredClasses = classes.filter(className => {
+    if (!className || typeof className !== 'string') return false;
+    return className.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   if (loading) {
     return (
@@ -154,6 +193,23 @@ const AdminClasses = () => {
             <Plus size={20} />
             <span>Thêm Lớp</span>
           </button>
+        </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+            <div className="flex items-center space-x-2 text-red-700">
+              <AlertCircle size={20} />
+              <span>{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Debug Info */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="text-sm text-blue-700">
+            <strong>Debug Info:</strong> Loaded {classes.length} classes, {filteredClasses.length} filtered
+          </div>
         </div>
 
         {/* Search */}
@@ -267,7 +323,9 @@ const AdminClasses = () => {
         {filteredClasses.length === 0 && (
           <div className="text-center py-12">
             <School size={48} className="mx-auto mb-4 text-gray-400" />
-            <p className="text-gray-500 text-lg">Không tìm thấy lớp học nào</p>
+            <p className="text-gray-500 text-lg">
+              {classes.length === 0 ? 'Không có lớp học nào trong hệ thống' : 'Không tìm thấy lớp học nào'}
+            </p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="mt-4 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700"
@@ -339,7 +397,7 @@ const AdminClasses = () => {
                       <option value="">Chọn giáo viên</option>
                       {teachers.map(teacher => (
                         <option key={teacher._id} value={teacher._id}>
-                          {teacher.fullName} ({teacher.username})
+                          {teacher.fullName || teacher.username} ({teacher.username})
                         </option>
                       ))}
                     </select>
@@ -371,7 +429,7 @@ const AdminClasses = () => {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
               <div className="p-6">
-                <h2 className="text-2xl font-bold text-gray-800 mb-4">Chỉnh sửa Lớp</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-4">Chỉnh sửa Lớp {selectedClass}</h2>
                 
                 <form onSubmit={handleEditClass} className="space-y-4">
                   <div>
@@ -412,7 +470,7 @@ const AdminClasses = () => {
                       <option value="">Chọn giáo viên</option>
                       {teachers.map(teacher => (
                         <option key={teacher._id} value={teacher._id}>
-                          {teacher.fullName} ({teacher.username})
+                          {teacher.fullName || teacher.username} ({teacher.username})
                         </option>
                       ))}
                     </select>

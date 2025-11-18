@@ -12,6 +12,8 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Tên lớp là bắt buộc' });
     }
 
+    console.log('🔄 Creating class:', { name, description, teacherId });
+
     // Kiểm tra lớp đã tồn tại trong hệ thống (có học sinh trong lớp)
     const existingUsers = await User.find({ class: name.toUpperCase() });
     if (existingUsers.length > 0) {
@@ -25,6 +27,9 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
       });
     }
 
+    // TẠO HỌC SINH DEMO ĐỂ LỚP HIỂN THỊ
+    await createDemoStudents(name.toUpperCase());
+
     res.status(201).json({
       message: 'Tạo lớp thành công',
       className: name.toUpperCase()
@@ -34,6 +39,56 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Hàm tạo học sinh demo
+async function createDemoStudents(className) {
+  try {
+    const demoStudents = [
+      {
+        username: `student_${className.toLowerCase()}_1`,
+        email: `student1.${className.toLowerCase()}@school.edu.vn`,
+        password: '$2a$10$exampleHashedPassword123', // password: 123456
+        fullName: `Học Sinh 1 ${className}`,
+        role: 'user',
+        class: className,
+        solvedProblems: Math.floor(Math.random() * 10),
+        rating: 1200 + Math.floor(Math.random() * 200),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        username: `student_${className.toLowerCase()}_2`,
+        email: `student2.${className.toLowerCase()}@school.edu.vn`,
+        password: '$2a$10$exampleHashedPassword123',
+        fullName: `Học Sinh 2 ${className}`,
+        role: 'user',
+        class: className,
+        solvedProblems: Math.floor(Math.random() * 10),
+        rating: 1200 + Math.floor(Math.random() * 200),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      {
+        username: `student_${className.toLowerCase()}_3`, 
+        email: `student3.${className.toLowerCase()}@school.edu.vn`,
+        password: '$2a$10$exampleHashedPassword123',
+        fullName: `Học Sinh 3 ${className}`,
+        role: 'user',
+        class: className,
+        solvedProblems: Math.floor(Math.random() * 10),
+        rating: 1200 + Math.floor(Math.random() * 200),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }
+    ];
+
+    await User.insertMany(demoStudents);
+    console.log(`✅ Created 3 demo students for class ${className}`);
+    
+  } catch (error) {
+    console.error('Error creating demo students:', error);
+  }
+}
 
 // Cập nhật lớp
 router.put('/:className', authenticate, isAdmin, async (req, res) => {

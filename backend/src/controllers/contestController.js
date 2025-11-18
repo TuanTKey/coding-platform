@@ -131,6 +131,23 @@ exports.updateContest = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+exports.deleteContest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const contest = await Contest.findById(id);
+
+    if (!contest) {
+      return res.status(404).json({ error: 'Contest not found' });
+    }
+
+    await Contest.findByIdAndDelete(id);
+
+    res.json({ message: 'Contest deleted successfully' });
+  } catch (error) {
+    console.error('Delete contest error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
 
 // Register for contest
 exports.registerContest = async (req, res) => {

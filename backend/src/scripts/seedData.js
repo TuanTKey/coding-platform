@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
+
 const User = require('../models/User');
 const Problem = require('../models/Problem');
 const TestCase = require('../models/TestCase');
@@ -24,83 +25,68 @@ const seedData = async () => {
     await User.deleteMany({});
     await Problem.deleteMany({});
     await TestCase.deleteMany({});
-
     console.log('🗑️  Cleared existing data');
 
-    // Create admin user
+    // ----------------------
+    // 1️⃣ SEED ADMIN
+    // ----------------------
     const admin = await User.create({
       username: 'admin',
       email: 'admin@codejudge.com',
       password: 'admin123',
       fullName: 'Admin User',
       role: 'admin',
-      rating: 2000
+      rating: 2000,
+      class: 'ADMIN' // ✅ Fix class
     });
 
     console.log('✅ Created admin user');
 
-    // Create test users
-    const users = await User.insertMany([
+    // ----------------------
+    // 2️⃣ SEED TEST USERS
+    // ----------------------
+    await User.insertMany([
       {
         username: 'alice',
         email: 'alice@example.com',
         password: 'password123',
         fullName: 'Alice Johnson',
-        rating: 1500
+        role: 'user',
+        rating: 1500,
+        class: 'NONE' // ✅ placeholder
       },
       {
         username: 'bob',
         email: 'bob@example.com',
         password: 'password123',
         fullName: 'Bob Smith',
-        rating: 1300
+        role: 'user',
+        rating: 1300,
+        class: 'NONE' // ✅ placeholder
       }
     ]);
 
     console.log('✅ Created test users');
 
-    // Create sample problems
+    // ----------------------
+    // 3️⃣ SEED PROBLEMS
+    // ----------------------
     const problem1 = await Problem.create({
       title: 'Two Sum',
       slug: 'two-sum',
-      description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
-
-You may assume that each input would have exactly one solution, and you may not use the same element twice.
-
-Example:
-Input: nums = [2,7,11,15], target = 9
-Output: [0,1]
-Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].`,
+      description: `Given an array of integers nums and an integer target...`,
       difficulty: 'easy',
       timeLimit: 2000,
       memoryLimit: 256,
       inputFormat: 'First line: array of integers\nSecond line: target integer',
       outputFormat: 'Two indices separated by space',
-      constraints: '2 <= nums.length <= 10^4',
       tags: ['array', 'hash-table'],
       createdBy: admin._id
     });
 
-    // Add test cases for Two Sum
     await TestCase.insertMany([
-      {
-        problemId: problem1._id,
-        input: '2 7 11 15\n9',
-        expectedOutput: '0 1',
-        isHidden: false
-      },
-      {
-        problemId: problem1._id,
-        input: '3 2 4\n6',
-        expectedOutput: '1 2',
-        isHidden: false
-      },
-      {
-        problemId: problem1._id,
-        input: '1 5 3 7 9\n8',
-        expectedOutput: '1 3',
-        isHidden: true
-      }
+      { problemId: problem1._id, input: '2 7 11 15\n9', expectedOutput: '0 1' },
+      { problemId: problem1._id, input: '3 2 4\n6', expectedOutput: '1 2' }
     ]);
 
     console.log('✅ Created problem: Two Sum');
@@ -108,89 +94,76 @@ Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].`,
     const problem2 = await Problem.create({
       title: 'Reverse String',
       slug: 'reverse-string',
-      description: `Write a function that reverses a string.
-
-Example:
-Input: "hello"
-Output: "olleh"`,
+      description: `Write a function that reverses a string.`,
       difficulty: 'easy',
       timeLimit: 1000,
       memoryLimit: 128,
-      inputFormat: 'A single line containing the string',
-      outputFormat: 'The reversed string',
-      constraints: '1 <= s.length <= 10^5',
       tags: ['string', 'two-pointers'],
       createdBy: admin._id
     });
 
     await TestCase.insertMany([
-      {
-        problemId: problem2._id,
-        input: 'hello',
-        expectedOutput: 'olleh',
-        isHidden: false
-      },
-      {
-        problemId: problem2._id,
-        input: 'CodeJudge',
-        expectedOutput: 'egduJedoC',
-        isHidden: true
-      }
+      { problemId: problem2._id, input: 'hello', expectedOutput: 'olleh' }
     ]);
 
     console.log('✅ Created problem: Reverse String');
 
-    const problem3 = await Problem.create({
-      title: 'Palindrome Number',
-      slug: 'palindrome-number',
-      description: `Given an integer x, return true if x is a palindrome, and false otherwise.
+    // ----------------------
+    // 4️⃣ SEED STUDENTS
+    // ----------------------
+    const sampleClasses = ['10A1', '10A2', '11A1', '11A2', '12A1'];
+    const students = [];
 
-Example:
-Input: 121
-Output: true
-
-Input: -121
-Output: false`,
-      difficulty: 'easy',
-      timeLimit: 1500,
-      memoryLimit: 128,
-      inputFormat: 'A single integer',
-      outputFormat: 'true or false',
-      constraints: '-2^31 <= x <= 2^31 - 1',
-      tags: ['math'],
-      createdBy: admin._id
+    sampleClasses.forEach(className => {
+      for (let i = 1; i <= 5; i++) {
+        students.push({
+          username: `student_${className.toLowerCase()}_${i}`,
+          email: `student${i}.${className.toLowerCase()}@school.edu.vn`,
+          password: '$2a$10$exampleHashedPassword123', // hashed password: 123456
+          fullName: `Học Sinh ${i} ${className}`,
+          role: 'user',
+          class: className, // ✅ học sinh có class đúng
+          solvedProblems: Math.floor(Math.random() * 15),
+          rating: 1200 + Math.floor(Math.random() * 300)
+        });
+      }
     });
 
-    await TestCase.insertMany([
+    // ----------------------
+    // 5️⃣ SEED TEACHERS
+    // ----------------------
+    const teachers = [
       {
-        problemId: problem3._id,
-        input: '121',
-        expectedOutput: 'true',
-        isHidden: false
+        username: 'teacher_nguyenvana',
+        email: 'nguyenvana@school.edu.vn',
+        password: '$2a$10$exampleHashedPassword123',
+        fullName: 'Nguyễn Văn A',
+        role: 'teacher',
+        teacherClasses: ['10A1', '10A2'],
+        class: 'TEACHER' // ✅ fix class
       },
       {
-        problemId: problem3._id,
-        input: '-121',
-        expectedOutput: 'false',
-        isHidden: false
-      },
-      {
-        problemId: problem3._id,
-        input: '12321',
-        expectedOutput: 'true',
-        isHidden: true
+        username: 'teacher_tranthib',
+        email: 'tranthib@school.edu.vn',
+        password: '$2a$10$exampleHashedPassword123',
+        fullName: 'Trần Thị B',
+        role: 'teacher',
+        teacherClasses: ['11A1', '11A2'],
+        class: 'TEACHER' // ✅ fix class
       }
-    ]);
+    ];
 
-    console.log('✅ Created problem: Palindrome Number');
+    await User.insertMany([...students, ...teachers]);
 
-    console.log('\n🎉 Seed data created successfully!');
-    console.log('\n📝 Login credentials:');
-    console.log('Admin: username=admin, password=admin123');
-    console.log('User1: username=alice, password=password123');
-    console.log('User2: username=bob, password=password123');
+    console.log(`👥 Created ${students.length} students`);
+    console.log(`👨‍🏫 Created ${teachers.length} teachers`);
 
+    // ----------------------
+    // DONE
+    // ----------------------
+    console.log('\n🎉 Full seed completed successfully!');
     process.exit(0);
+
   } catch (error) {
     console.error('❌ Seed error:', error);
     process.exit(1);

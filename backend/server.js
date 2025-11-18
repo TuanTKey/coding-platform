@@ -51,7 +51,7 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/contests", contestRoutes);
 app.use("/api/users", userRoutes);
-app.use('/api/classes', classRoutes);
+app.use('/api/admin/classes', classRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {

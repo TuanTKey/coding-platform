@@ -57,7 +57,8 @@ const userSchema = new mongoose.Schema({
     enum: [
       '10A1', '10A2', '10A3', '10A4', '10A5',
       '11A1', '11A2', '11A3', '11A4', '11A5', 
-      '12A1', '12A2', '12A3', '12A4', '12A5'
+      '12A1', '12A2', '12A3', '12A4', '12A5',
+      'ADMIN', 'TEACHER','NONE'
     ]
   },
   // Field để giáo viên quản lý nhiều lớp
