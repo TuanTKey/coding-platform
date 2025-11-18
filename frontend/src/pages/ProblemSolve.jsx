@@ -220,7 +220,7 @@ public class Solution {
             // Add result to terminal history
             const resultEntry = {
               type: submission.status === 'accepted' ? 'success' : 'error',
-              content: `📊 Result: ${getStatusText(submission.status)}\nTest Cases: ${submission.testCasesPassed}/${submission.totalTestCases}\nTime: ${submission.executionTime}ms`,
+              content: `📊 Result: ${getStatusText(submission.status)}\nTest Cases: ${submission.testCasesPassed}/${submission.totalTestCases}\nTime: ${submission.executionTime || 0}ms`,
               timestamp: new Date().toLocaleTimeString()
             };
             setTerminalHistory(prev => [...prev, resultEntry]);

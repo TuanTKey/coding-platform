@@ -23,9 +23,13 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminSubmissions from './components/admin/AdminSubmissions';
 import EditProblem from './components/admin/EditProblem';
 import AdminContests from './components/admin/AdminContests';
-import CreateContest from './context/CreateContest';
+import CreateContest from './components/contests/CreateContest';
 import EditContest from './components/admin/EditContest';
 import ContestLeaderboard from './components/admin/ContestLeaderboard';
+
+// THÊM TRANG QUẢN LÝ LỚP HỌC
+import AdminClasses from './components/admin/AdminClasses';
+import ClassDetail from './components/admin/ClassDetail';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -55,21 +59,30 @@ function AppRoutes() {
         {/* User Routes */}
         <Route path="/problems" element={<ProtectedRoute><Problems /></ProtectedRoute>} />
         <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
-        <Route path="/contests" element={<ContestList />} />
-        <Route path="/contests/:id" element={<ContestDetail />} />  
+        <Route path="/contests" element={<ProtectedRoute><ContestList /></ProtectedRoute>} />
+        <Route path="/contests/:id" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />  
         
         {/* Admin Routes */}
-        // Thêm các route admin
         <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         <Route path="/admin/problems" element={<AdminRoute><AdminProblems /></AdminRoute>} />
         <Route path="/admin/problems/create" element={<AdminRoute><CreateProblem /></AdminRoute>} />
-        <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
         <Route path="/admin/problems/edit/:id" element={<AdminRoute><EditProblem /></AdminRoute>} />
+        
+        <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
+        
+        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+        
         <Route path="/admin/contests" element={<AdminRoute><AdminContests /></AdminRoute>} />
         <Route path="/admin/contests/create" element={<AdminRoute><CreateContest /></AdminRoute>} />
         <Route path="/admin/contests/edit/:id" element={<AdminRoute><EditContest /></AdminRoute>} />
         <Route path="/admin/contests/:id/leaderboard" element={<AdminRoute><ContestLeaderboard /></AdminRoute>} />
+        
+        {/* THÊM ROUTES QUẢN LÝ LỚP HỌC */}
+        <Route path="/admin/classes" element={<AdminRoute><AdminClasses /></AdminRoute>} />
+        <Route path="/admin/class/:class" element={<AdminRoute><ClassDetail /></AdminRoute>} />
+        
+        {/* Fallback Route */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>
   );
@@ -79,7 +92,9 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <AppRoutes />
+        <div className="App">
+          <AppRoutes />
+        </div>
       </AuthProvider>
     </Router>
   );

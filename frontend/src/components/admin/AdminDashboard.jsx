@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
-import { Users, FileCode, Send, Trophy, TrendingUp } from 'lucide-react';
+import { Users, FileCode, Send, Trophy, TrendingUp, BookOpen, School } from 'lucide-react';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -9,6 +9,7 @@ const AdminDashboard = () => {
     totalProblems: 0,
     totalSubmissions: 0,
     totalContests: 0,
+    totalClasses: 0,
     recentSubmissions: []
   });
   const [loading, setLoading] = useState(true);
@@ -22,61 +23,41 @@ const AdminDashboard = () => {
       console.log('🔄 Fetching admin stats...');
       
       // Fetch từ các endpoints
-      const [usersRes, problemsRes, submissionsRes, contestsRes] = await Promise.all([
-        api.get('/users?limit=1&page=1'),
+      const [usersRes, problemsRes, submissionsRes, contestsRes, classesRes] = await Promise.all([
+        api.get('/users/admin/stats'),
         api.get('/problems?limit=1&page=1'),
         api.get('/submissions/admin/all?limit=10'),
-        api.get('/contests?limit=1&page=1')
+        api.get('/contests?limit=1&page=1'),
+        api.get('/users/classes/all')
       ]);
 
       console.log('📊 API Responses:', {
         users: usersRes.data,
-        problems: problemsRes.data,
-        submissions: submissionsRes.data
+        classes: classesRes.data
       });
 
       setStats({
-        totalUsers: usersRes.data.total || 0,
+        totalUsers: usersRes.data.totalUsers || 0,
+        totalStudents: usersRes.data.totalStudents || 0,
+        totalTeachers: usersRes.data.totalTeachers || 0,
         totalProblems: problemsRes.data.total || 0,
         totalSubmissions: submissionsRes.data.total || 0,
         totalContests: contestsRes.data.total || 0,
+        totalClasses: classesRes.data.total || 0,
         recentSubmissions: submissionsRes.data.submissions || []
       });
 
     } catch (error) {
       console.error('❌ Error fetching stats:', error);
-      
-      // Fallback: thử lấy từng cái một
-      try {
-        const usersRes = await api.get('/users?limit=1&page=1');
-        const usersTotal = usersRes.data.total || usersRes.data.users?.length || 0;
-        console.log('👥 Users total:', usersTotal);
-        setStats(prev => ({ ...prev, totalUsers: usersTotal }));
-      } catch (e) {
-        console.error('❌ Failed to fetch users:', e);
-      }
-
-      try {
-        const problemsRes = await api.get('/problems?limit=1&page=1');
-        const problemsTotal = problemsRes.data.total || problemsRes.data.problems?.length || 0;
-        console.log('📝 Problems total:', problemsTotal);
-        setStats(prev => ({ ...prev, totalProblems: problemsTotal }));
-      } catch (e) {
-        console.error('❌ Failed to fetch problems:', e);
-      }
-
-      try {
-        const submissionsRes = await api.get('/submissions/admin/all?limit=10');
-        const submissionsTotal = submissionsRes.data.total || submissionsRes.data.submissions?.length || 0;
-        console.log('📨 Submissions total:', submissionsTotal);
-        setStats(prev => ({ 
-          ...prev, 
-          totalSubmissions: submissionsTotal,
-          recentSubmissions: submissionsRes.data.submissions || []
-        }));
-      } catch (e) {
-        console.error('❌ Failed to fetch submissions:', e);
-      }
+      // Fallback data
+      setStats(prev => ({
+        ...prev,
+        totalUsers: 0,
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalClasses: 0,
+        recentSubmissions: []
+      }));
     } finally {
       setLoading(false);
     }
@@ -88,7 +69,8 @@ const AdminDashboard = () => {
       value: stats.totalUsers,
       icon: Users,
       color: 'from-blue-500 to-blue-600',
-      link: '/admin/users'
+      link: '/admin/users',
+      description: `${stats.totalStudents} học sinh, ${stats.totalTeachers} giáo viên`
     },
     {
       title: 'Tổng Problems',
@@ -110,6 +92,14 @@ const AdminDashboard = () => {
       icon: Trophy,
       color: 'from-orange-500 to-orange-600',
       link: '/admin/contests'
+    },
+    {
+      title: 'Lớp học',
+      value: stats.totalClasses,
+      icon: School,
+      color: 'from-red-500 to-red-600',
+      link: '/admin/classes',
+      description: 'Tổng số lớp'
     }
   ];
 
@@ -127,14 +117,14 @@ const AdminDashboard = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-          <p className="text-gray-600">Quản lý coding platform</p>
+          <p className="text-gray-600">Quản lý hệ thống học tập</p>
           <div className="mt-2 text-sm text-gray-500">
-            Debug: Users: {stats.totalUsers} | Problems: {stats.totalProblems} | Submissions: {stats.totalSubmissions}
+            Hệ thống quản lý lớp học và bài tập lập trình
           </div>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
           {statCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -151,6 +141,9 @@ const AdminDashboard = () => {
                 </div>
                 <h3 className="text-gray-600 text-sm font-medium mb-1">{stat.title}</h3>
                 <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
+                {stat.description && (
+                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-1">Click để xem chi tiết</p>
               </Link>
             );
@@ -186,6 +179,12 @@ const AdminDashboard = () => {
               >
                 Xem tất cả Submissions
               </Link>
+              <Link
+                to="/admin/classes"
+                className="block w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-green-700 hover:to-emerald-700 transition text-center"
+              >
+                Quản lý Lớp học
+              </Link>
             </div>
           </div>
 
@@ -200,9 +199,14 @@ const AdminDashboard = () => {
                 stats.recentSubmissions.map((submission, index) => (
                   <div key={submission._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex-1">
-                      <p className="font-semibold text-gray-800">
-                        {submission.userId?.username || 'Unknown'}
-                      </p>
+                      <div className="flex items-center space-x-2">
+                        <p className="font-semibold text-gray-800">
+                          {submission.userId?.username || 'Unknown'}
+                        </p>
+                        <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          {submission.userId?.class || 'N/A'}
+                        </span>
+                      </div>
                       <p className="text-sm text-gray-600">
                         {submission.problemId?.title || 'Unknown Problem'}
                       </p>
