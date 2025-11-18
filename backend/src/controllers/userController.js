@@ -356,3 +356,54 @@ exports.getTeachers = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+// Cập nhật lớp cho giáo viên (admin only)
+exports.updateTeacherClasses = async (req, res) => {
+  try {
+    const { teacherId } = req.params;
+    const { teacherClasses } = req.body;
+
+    // Chỉ admin mới được cập nhật
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin mới có quyền này' });
+    }
+
+    const teacher = await User.findByIdAndUpdate(
+      teacherId,
+      { teacherClasses },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!teacher || teacher.role !== 'teacher') {
+      return res.status(404).json({ error: 'Giáo viên không tồn tại' });
+    }
+
+    res.json({
+      message: 'Cập nhật lớp cho giáo viên thành công',
+      teacher
+    });
+  } catch (error) {
+    console.error('Update teacher classes error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Lấy danh sách giáo viên và lớp họ quản lý
+exports.getTeachers = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ admin mới có quyền này' });
+    }
+
+    const teachers = await User.find({ role: 'teacher' })
+      .select('username fullName email teacherClasses createdAt')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      teachers,
+      total: teachers.length
+    });
+  } catch (error) {
+    console.error('Get teachers error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};

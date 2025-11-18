@@ -4,9 +4,20 @@ const userController = require('../controllers/userController');
 const { authenticate, isAdmin } = require('../middleware/auth');
 const User = require('../models/User');
 
-// ... các route khác ...
+// Public routes
+router.get('/leaderboard', userController.getLeaderboard);
+router.get('/:id', userController.getUserProfile);
 
-// SỬA LẠI Route stats cho admin
+// Authenticated routes
+router.get('/me', authenticate, userController.getCurrentUser);
+router.put('/me', authenticate, userController.updateProfile);
+
+// Class management routes
+router.get('/classes/all', userController.getClasses);
+router.get('/class/:class/users', authenticate, userController.getUsersByClass);
+router.get('/class/:class/statistics', authenticate, userController.getClassStatistics);
+
+// Admin only routes
 router.get('/admin/stats', authenticate, isAdmin, async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
@@ -26,7 +37,27 @@ router.get('/admin/stats', authenticate, isAdmin, async (req, res) => {
   }
 });
 
-// THÊM API để lấy users theo lớp
+// THÊM API LẤY DANH SÁCH GIÁO VIÊN
+router.get('/admin/teachers', authenticate, isAdmin, async (req, res) => {
+  try {
+    const teachers = await User.find({ role: 'teacher' })
+      .select('username fullName email teacherClasses createdAt')
+      .sort({ createdAt: -1 });
+
+    res.json({
+      teachers,
+      total: teachers.length
+    });
+  } catch (error) {
+    console.error('Get teachers error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// THÊM API CẬP NHẬT LỚP CHO GIÁO VIÊN
+router.put('/admin/teachers/:teacherId/classes', authenticate, isAdmin, userController.updateTeacherClasses);
+
+// THÊM API LẤY USERS THEO LỚP (đã có trong controller)
 router.get('/class/:className/users', authenticate, isAdmin, async (req, res) => {
   try {
     const { className } = req.params;
@@ -47,7 +78,7 @@ router.get('/class/:className/users', authenticate, isAdmin, async (req, res) =>
   }
 });
 
-// THÊM API để lấy thống kê lớp
+// THÊM API LẤY THỐNG KÊ LỚP
 router.get('/class/:className/statistics', authenticate, isAdmin, async (req, res) => {
   try {
     const { className } = req.params;

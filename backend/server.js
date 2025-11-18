@@ -44,12 +44,14 @@ const problemRoutes = require("./src/routes/problems");
 const submissionRoutes = require("./src/routes/submissions");
 const contestRoutes = require("./src/routes/contests");
 const userRoutes = require("./src/routes/users");
+const classRoutes = require('./src/routes/class');
 
 app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/contests", contestRoutes);
 app.use("/api/users", userRoutes);
+app.use('/api/classes', classRoutes);
 
 // Health check
 app.get("/api/health", (req, res) => {
