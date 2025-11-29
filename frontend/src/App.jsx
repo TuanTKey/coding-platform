@@ -29,6 +29,11 @@ import CreateContest from './components/contests/CreateContest';
 import EditContest from './components/admin/EditContest';
 import ContestLeaderboard from './components/admin/ContestLeaderboard';
 
+// Teacher
+import TeacherRoute from './components/teacher/TeacherRoute';
+import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherStudents from './pages/TeacherStudents';
+
 // THÊM TRANG QUẢN LÝ LỚP HỌC
 import AdminClasses from './components/admin/AdminClasses';
 import ClassDetail from './components/admin/ClassDetail';
@@ -85,6 +90,10 @@ function AppRoutes() {
         {/* THÊM ROUTES QUẢN LÝ LỚP HỌC */}
         <Route path="/admin/classes" element={<AdminRoute><AdminClasses /></AdminRoute>} />
         <Route path="/admin/class/:class" element={<AdminRoute><ClassDetail /></AdminRoute>} />
+
+        {/* Teacher Routes */}
+        <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
+        <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
         
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />

@@ -65,6 +65,33 @@ const submissionSchema = new mongoose.Schema({
     type: String,
     enum: ['traditional', 'ai', 'hybrid'],
     default: 'traditional'
+  },
+  // ⭐ Thêm mảng lưu kết quả từng test case
+  testCasesResult: [
+    {
+      input: String,
+      expected: String,
+      output: String,
+      status: String,
+      time: Number,
+      error: String
+    }
+  ],
+  // Manual override by teacher/admin
+  manualScore: {
+    type: Number,
+    default: null
+  },
+  manualOverrideNote: {
+    type: String,
+    default: null
+  },
+  manualOverriddenBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  manualOverriddenAt: {
+    type: Date
   }
 }, {
   timestamps: true

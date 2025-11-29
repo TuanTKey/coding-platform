@@ -29,51 +29,34 @@ const AdminClasses = () => {
       setLoading(true);
       setError('');
       console.log('🔄 Fetching classes...');
-      
-      const classesRes = await api.get('/users/classes/all');
+      // Lấy từ API server-side mới: /admin/classes
+      const classesRes = await api.get('/admin/classes');
       console.log('📚 Classes response:', classesRes.data);
-      
-      // ĐẢM BẢO classesList KHÔNG CÓ NULL/UNDEFINED
-      const classesList = (classesRes.data.classes || [])
-        .filter(className => className && typeof className === 'string')
-        .sort();
-      
-      console.log('✅ Filtered classes:', classesList);
+
+      // classes: array of class objects
+      const classesList = (classesRes.data.classes || []).map(c => c.name).filter(Boolean).sort();
+      const statsFromApi = classesRes.data.stats || {};
 
       // TÍNH TOÁN THỦ CÔNG VÌ API STATS CÓ THỂ CHƯA CÓ
       try {
-        const submissionsRes = await api.get('/submissions/admin/all?limit=1000');
-        const submissions = submissionsRes.data.submissions || [];
-        console.log('📊 Submissions count:', submissions.length);
+      // Use stats returned by server
+      const stats = {};
+      classesList.forEach(className => {
+        const s = statsFromApi[className] || {};
+        const acceptanceRate = s.totalSubmissions && s.totalSubmissions > 0 ? ((s.acceptedSubmissions || 0) / s.totalSubmissions * 100).toFixed(1) : 0;
+        stats[className] = {
+          totalSubmissions: s.totalSubmissions || 0,
+          acceptedSubmissions: s.acceptedSubmissions || 0,
+          uniqueStudents: s.uniqueStudents || 0,
+          acceptanceRate: acceptanceRate,
+          solvedProblems: s.solvedProblems || 0
+        };
+      });
 
-        const stats = {};
-        classesList.forEach(className => {
-          const classSubmissions = submissions.filter(sub => 
-            sub.userId?.class === className
-          );
-          const acceptedSubmissions = classSubmissions.filter(sub => 
-            sub.status === 'accepted'
-          );
-          const uniqueStudents = new Set(
-            classSubmissions.map(sub => sub.userId?._id).filter(id => id)
-          ).size;
-          
-          stats[className] = {
-            totalSubmissions: classSubmissions.length,
-            acceptedSubmissions: acceptedSubmissions.length,
-            uniqueStudents,
-            acceptanceRate: classSubmissions.length > 0 ? 
-              ((acceptedSubmissions.length / classSubmissions.length) * 100).toFixed(1) : 0,
-            solvedProblems: new Set(
-              acceptedSubmissions.map(sub => sub.problemId?._id).filter(id => id)
-            ).size
-          };
-        });
-
-        setClasses(classesList);
-        setClassStats(stats);
-        console.log('✅ Classes loaded:', classesList);
-        console.log('📈 Stats calculated:', stats);
+      setClasses(classesRes.data.classes || []);
+      setClassStats(stats);
+      console.log('✅ Classes loaded:', classesRes.data.classes || []);
+      console.log('📈 Stats calculated:', stats);
         
       } catch (statsError) {
         console.error('❌ Error calculating stats:', statsError);
@@ -155,16 +138,18 @@ const AdminClasses = () => {
 
   const openEditModal = (className) => {
     setSelectedClass(className);
+    const cls = classes.find(c => c.name === className) || {};
     setFormData({
       name: className,
-      description: '',
-      teacherId: ''
+      description: cls.description || '',
+      teacherId: cls.teacherId || ''
     });
     setShowEditModal(true);
   };
 
   // SỬA PHẦN FILTER - THÊM KIỂM TRA NULL
-  const filteredClasses = classes.filter(className => {
+  const filteredClasses = classes.filter(c => {
+    const className = c?.name;
     if (!className || typeof className !== 'string') return false;
     return className.toLowerCase().includes(searchTerm.toLowerCase());
   });
@@ -228,7 +213,8 @@ const AdminClasses = () => {
 
         {/* Classes Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map(className => {
+          {filteredClasses.map(cl => {
+            const className = cl.name;
             const stats = classStats[className] || {
               totalSubmissions: 0,
               acceptedSubmissions: 0,
@@ -264,9 +250,15 @@ const AdminClasses = () => {
                   </div>
                 </div>
 
-                <div className="text-center mb-4">
-                  <span className="text-2xl font-bold text-gray-800">{className}</span>
-                </div>
+                    <div className="text-center mb-4">
+                        <span className="text-2xl font-bold text-gray-800">{className}</span>
+                        {cl.description && (
+                          <div className="text-sm text-gray-500 mt-1">{cl.description}</div>
+                        )}
+                        <div className="text-sm text-gray-600 mt-2">
+                          Giáo viên: {cl.teacherId ? (teachers.find(t => t._id === cl.teacherId)?.fullName || teachers.find(t => t._id === cl.teacherId)?.username || '---') : 'Chưa có'}
+                        </div>
+                    </div>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -347,29 +339,15 @@ const AdminClasses = () => {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Tên lớp *
                     </label>
-                    <select
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                    >
-                      <option value="">Chọn lớp</option>
-                      <option value="10A1">10A1</option>
-                      <option value="10A2">10A2</option>
-                      <option value="10A3">10A3</option>
-                      <option value="10A4">10A4</option>
-                      <option value="10A5">10A5</option>
-                      <option value="11A1">11A1</option>
-                      <option value="11A2">11A2</option>
-                      <option value="11A3">11A3</option>
-                      <option value="11A4">11A4</option>
-                      <option value="11A5">11A5</option>
-                      <option value="12A1">12A1</option>
-                      <option value="12A2">12A2</option>
-                      <option value="12A3">12A3</option>
-                      <option value="12A4">12A4</option>
-                      <option value="12A5">12A5</option>
-                    </select>
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        required
+                        placeholder="Ví dụ: 10A1"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Tên lớp sẽ được chuẩn hóa (VIẾT HOA) trên server.</p>
                   </div>
 
                   <div>

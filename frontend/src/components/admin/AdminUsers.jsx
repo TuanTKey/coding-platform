@@ -2,6 +2,44 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import { Search, Shield, User, TrendingUp } from 'lucide-react';
 
+const CreateTeacherForm = ({ onCreated }) => {
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post('/users/admin/teachers', { username, email, password, fullName });
+      setUsername(''); setEmail(''); setPassword(''); setFullName('');
+      if (onCreated) onCreated();
+      alert('Tạo giáo viên thành công');
+    } catch (err) {
+      console.error('Create teacher', err);
+      alert(err.response?.data?.error || 'Lỗi khi tạo giáo viên');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+      <input value={username} onChange={e => setUsername(e.target.value)} placeholder="username" className="p-2 border rounded" required />
+      <input value={fullName} onChange={e => setFullName(e.target.value)} placeholder="Họ và tên" className="p-2 border rounded" />
+      <input value={email} onChange={e => setEmail(e.target.value)} placeholder="email" className="p-2 border rounded" type="email" required />
+      <input value={password} onChange={e => setPassword(e.target.value)} placeholder="password" className="p-2 border rounded" type="password" required />
+      <div>
+        <button type="submit" disabled={loading} className="bg-purple-600 text-white px-4 py-2 rounded">
+          {loading ? 'Đang tạo...' : 'Tạo giáo viên'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,6 +79,11 @@ const AdminUsers = () => {
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">Manage Users</h1>
           <p className="text-gray-600">{users.length} registered users</p>
+        </div>
+        {/* Create teacher form */}
+        <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+          <h3 className="font-semibold mb-3">Tạo giáo viên mới</h3>
+          <CreateTeacherForm onCreated={fetchUsers} />
         </div>
 
         {/* Search */}

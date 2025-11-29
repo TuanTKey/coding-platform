@@ -54,6 +54,214 @@ router.get('/admin/teachers', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// TẠO GIÁO VIÊN (ADMIN ONLY)
+router.post('/admin/teachers', authenticate, isAdmin, async (req, res) => {
+  try {
+    const { username, email, password, fullName, teacherClasses = [] } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'username, email và password là bắt buộc' });
+    }
+
+    // Kiểm tra tồn tại
+    const existing = await User.findOne({ $or: [{ username }, { email }] });
+    if (existing) return res.status(400).json({ error: 'Username hoặc email đã tồn tại' });
+
+    const newTeacher = await User.create({
+      username,
+      email,
+      password,
+      fullName,
+      role: 'teacher',
+      teacherClasses
+    });
+
+    res.status(201).json({ message: 'Tạo giáo viên thành công', teacher: {
+      id: newTeacher._id,
+      username: newTeacher.username,
+      email: newTeacher.email,
+      fullName: newTeacher.fullName,
+      teacherClasses: newTeacher.teacherClasses
+    }});
+  } catch (error) {
+    console.error('Create teacher error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// LẤY THÔNG TIN GIÁO VIÊN HIỆN TẠI, DANH SÁCH LỚP VÀ HỌC SINH TRONG LÔI
+router.get('/teacher/me', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const current = await User.findById(userId).lean();
+    if (!current) return res.status(404).json({ error: 'User không tồn tại' });
+
+    if (current.role !== 'teacher' && current.role !== 'admin') {
+      return res.status(403).json({ error: 'Chỉ giáo viên hoặc admin mới truy cập' });
+    }
+
+    // Lấy các lớp mà giáo viên quản lý
+    const Class = require('../models/Class');
+    // teacherClasses có thể chứa tên lớp (ví dụ '10A1') hoặc _id; xử lý an toàn để tránh CastError
+    const teacherClasses = current.teacherClasses || [];
+    const objectIds = teacherClasses.filter(tc => /^[0-9a-fA-F]{24}$/.test(tc));
+    const names = teacherClasses.filter(tc => !(/^[0-9a-fA-F]{24}$/.test(tc)));
+    const classQuery = { $or: [] };
+    if (objectIds.length) classQuery.$or.push({ _id: { $in: objectIds } });
+    if (names.length) classQuery.$or.push({ name: { $in: names } });
+    const classes = classQuery.$or.length ? await Class.find(classQuery).lean() : [];
+
+    // Lấy học sinh thuộc các lớp này (dựa theo tên lớp)
+    const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
+    const students = await User.find({ class: { $in: classNames } }).select('username email fullName class').lean();
+
+    res.json({ teacher: { id: current._id, username: current.username, email: current.email, fullName: current.fullName }, classes, students });
+  } catch (err) {
+    console.error('GET /teacher/me error', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// TEACHER: LẤY DANH SÁCH HỌC SINH (các lớp được phân công)
+router.get('/teacher/students', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const current = await User.findById(userId).lean();
+    if (!current) return res.status(404).json({ error: 'User không tồn tại' });
+    if (current.role !== 'teacher' && current.role !== 'admin') return res.status(403).json({ error: 'Chỉ giáo viên/admin' });
+
+    const Class = require('../models/Class');
+    const teacherClasses = current.teacherClasses || [];
+    const objectIds = teacherClasses.filter(tc => /^[0-9a-fA-F]{24}$/.test(tc));
+    const names = teacherClasses.filter(tc => !(/^[0-9a-fA-F]{24}$/.test(tc)));
+    const classQuery = { $or: [] };
+    if (objectIds.length) classQuery.$or.push({ _id: { $in: objectIds } });
+    if (names.length) classQuery.$or.push({ name: { $in: names } });
+    const classes = classQuery.$or.length ? await Class.find(classQuery).lean() : [];
+    const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
+
+    const students = await User.find({ class: { $in: classNames }, role: 'user' })
+      .select('username email fullName class createdAt')
+      .lean();
+
+    res.json({ classes, students });
+  } catch (err) {
+    console.error('GET /teacher/students error', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// TEACHER: THÊM HỌC SINH VÀO LỚP (teacher chỉ có thể thêm vào lớp mình quản lý)
+router.post('/teacher/students', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { studentId, classId } = req.body;
+    if (!studentId || !classId) return res.status(400).json({ error: 'studentId và classId là bắt buộc' });
+
+    const current = await User.findById(userId);
+    if (!current) return res.status(404).json({ error: 'User không tồn tại' });
+    if (current.role !== 'teacher' && current.role !== 'admin') return res.status(403).json({ error: 'Chỉ giáo viên/admin' });
+
+    // Kiểm tra giáo viên quản lý lớp này
+    const Class = require('../models/Class');
+    const cls = await Class.findById(classId);
+    if (!cls) return res.status(404).json({ error: 'Class không tồn tại' });
+
+    const manages = current.role === 'admin' || (current.teacherClasses || []).some(id => id.toString() === classId);
+    if (!manages) return res.status(403).json({ error: 'Bạn không quản lý lớp này' });
+
+    const student = await User.findById(studentId);
+    if (!student) return res.status(404).json({ error: 'Student không tồn tại' });
+    if (student.role !== 'user') return res.status(400).json({ error: 'Target must be a student' });
+
+    student.class = cls.name;
+    await student.save();
+
+    res.json({ message: 'Thêm học sinh vào lớp thành công', student: { id: student._id, username: student.username, class: student.class } });
+  } catch (err) {
+    console.error('POST /teacher/students error', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// TEACHER: XÓA HỌC SINH KHỎI LỚP
+router.delete('/teacher/students/:studentId', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { studentId } = req.params;
+    const { classId } = req.body; // expect classId in body to confirm which class to remove from
+
+    if (!classId) return res.status(400).json({ error: 'classId là bắt buộc' });
+
+    const current = await User.findById(userId);
+    if (!current) return res.status(404).json({ error: 'User không tồn tại' });
+    if (current.role !== 'teacher' && current.role !== 'admin') return res.status(403).json({ error: 'Chỉ giáo viên/admin' });
+
+    const Class = require('../models/Class');
+    const cls = await Class.findById(classId);
+    if (!cls) return res.status(404).json({ error: 'Class không tồn tại' });
+
+    const manages = current.role === 'admin' || (current.teacherClasses || []).some(id => id.toString() === classId);
+    if (!manages) return res.status(403).json({ error: 'Bạn không quản lý lớp này' });
+
+    const student = await User.findById(studentId);
+    if (!student) return res.status(404).json({ error: 'Student không tồn tại' });
+    if (student.class !== cls.name) return res.status(400).json({ error: 'Học sinh không thuộc lớp này' });
+
+    student.class = null;
+    await student.save();
+
+    res.json({ message: 'Đã xóa học sinh khỏi lớp', student: { id: student._id } });
+  } catch (err) {
+    console.error('DELETE /teacher/students/:studentId error', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// TEACHER: OVERRIDE/ADJUST SUBMISSION SCORE
+router.post('/teacher/submissions/:submissionId/override', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { submissionId } = req.params;
+    const { manualScore, note } = req.body;
+
+    if (manualScore == null) return res.status(400).json({ error: 'manualScore là bắt buộc' });
+
+    const current = await User.findById(userId);
+    if (!current) return res.status(404).json({ error: 'User không tồn tại' });
+    if (current.role !== 'teacher' && current.role !== 'admin') return res.status(403).json({ error: 'Chỉ giáo viên/admin' });
+
+    const Submission = require('../models/Submission');
+    const submission = await Submission.findById(submissionId);
+    if (!submission) return res.status(404).json({ error: 'Submission không tồn tại' });
+
+    const student = await User.findById(submission.userId);
+    if (!student) return res.status(404).json({ error: 'Student không tồn tại' });
+
+    // xác nhận giáo viên quản lý lớp của học sinh
+    const Class = require('../models/Class');
+    const studentClass = await Class.findOne({ name: student.class });
+    // current.teacherClasses may store class names or class _id strings
+    const tc = current.teacherClasses || [];
+    const managesByName = tc.includes(student.class);
+    const managesById = studentClass && tc.some(id => /^[0-9a-fA-F]{24}$/.test(id) && id.toString() === studentClass._id.toString());
+    const manages = current.role === 'admin' || managesByName || managesById;
+    if (!manages) return res.status(403).json({ error: 'Bạn không có quyền chỉnh submission này' });
+
+    submission.manualScore = manualScore;
+    submission.manualOverrideNote = note || null;
+    submission.manualOverriddenBy = current._id;
+    submission.manualOverriddenAt = new Date();
+
+    await submission.save();
+
+    res.json({ message: 'Ghi đè điểm thành công', submissionId: submission._id, manualScore: submission.manualScore });
+  } catch (err) {
+    console.error('POST /teacher/submissions/:id/override error', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // THÊM API CẬP NHẬT LỚP CHO GIÁO VIÊN
 router.put('/admin/teachers/:teacherId/classes', authenticate, isAdmin, userController.updateTeacherClasses);
 

@@ -71,6 +71,17 @@ const Navbar = () => {
                   <span>Quản trị</span>
                 </Link>
               )}
+
+              {/* Teacher Link */}
+              {(user.role === 'teacher' || user.role === 'admin') && (
+                <Link
+                  to="/teacher"
+                  className="flex items-center space-x-2 text-gray-700 hover:text-purple-600 transition-all duration-200 font-medium group"
+                >
+                  <BarChart3 size={18} className="group-hover:scale-110 transition-transform" />
+                  <span>Giáo viên</span>
+                </Link>
+              )}
             </div>
           )}
 
@@ -181,6 +192,15 @@ const Navbar = () => {
                 >
                   <Shield size={20} />
                   <span className="text-xs font-medium">Quản trị</span>
+                </Link>
+              )}
+              {(user.role === 'teacher' || user.role === 'admin') && (
+                <Link
+                  to="/teacher"
+                  className="flex flex-col items-center space-y-1 text-gray-600 hover:text-purple-600 transition-all"
+                >
+                  <BarChart3 size={20} />
+                  <span className="text-xs font-medium">Giáo viên</span>
                 </Link>
               )}
             </div>

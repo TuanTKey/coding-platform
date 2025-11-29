@@ -705,6 +705,42 @@ const ProblemSolve = () => {
           )}
         </div>
       </div>
+
+      {/* Hiển thị feedback chi tiết cho từng test case sau khi chấm */}
+      {result && result.testCasesResult && result.testCasesResult.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-white font-semibold mb-2">Test Case Feedback</h3>
+          <div className="space-y-3">
+            {result.testCasesResult.map((tc, idx) => (
+              <div key={idx} className="bg-[#222] rounded-lg border border-[#444] p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`font-bold text-sm ${getStatusColor(tc.status)}`}>Test Case #{idx + 1}: {getStatusText(tc.status)}</span>
+                  {tc.time !== undefined && (
+                    <span className="text-xs text-gray-400">Time: {tc.time}ms</span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-xs">
+                  <div>
+                    <div className="text-gray-400 mb-1">Input</div>
+                    <pre className="text-green-400 whitespace-pre-wrap">{tc.input}</pre>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 mb-1">Output</div>
+                    <pre className="text-cyan-400 whitespace-pre-wrap">{tc.output}</pre>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 mb-1">Expected</div>
+                    <pre className="text-yellow-400 whitespace-pre-wrap">{tc.expected}</pre>
+                  </div>
+                </div>
+                {tc.error && (
+                  <div className="mt-2 text-red-400 text-xs">Error: {tc.error}</div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

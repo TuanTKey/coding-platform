@@ -95,7 +95,8 @@ class JudgeService {
         executionTime: result.executionTime || 0,
         errorMessage: result.status !== 'accepted' ? result.feedback : null,
         aiAnalysis: result.aiAnalysis,
-        memory: 0
+        memory: 0,
+        testCasesResult: result.testCasesResult || []
       });
 
       if (result.status === 'accepted') {
@@ -129,7 +130,6 @@ class JudgeService {
 
     // Create temp directory
     const tempDir = path.join(__dirname, '../../temp', submissionId.toString());
-    
     try {
       await fs.mkdir(tempDir, { recursive: true });
     } catch (mkdirError) {
@@ -139,7 +139,6 @@ class JudgeService {
     }
 
     const filename = path.join(tempDir, `solution.${langConfig.extension}`);
-    
     try {
       await fs.writeFile(filename, code);
     } catch (writeError) {
@@ -161,7 +160,7 @@ class JudgeService {
       if (compileResult.error) {
         console.log('❌ Compilation failed:', compileResult.stderr);
         await this.updateSubmissionError(
-          submissionId, 
+          submissionId,
           compileResult.stderr || 'Compilation error',
           'compile_error',
           0,
@@ -174,14 +173,15 @@ class JudgeService {
       console.log('✅ Compilation successful');
     }
 
-    // Run test cases
+    // Run test cases sequentially
     let passedTests = 0;
     let totalTime = 0;
+    const testCasesResult = [];
 
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       console.log(`🧪 Running test case ${i + 1}/${testCases.length}...`);
-      
+
       const result = await this.runTestCase(
         langConfig.runCmd(filename),
         tempDir,
@@ -191,12 +191,23 @@ class JudgeService {
         problem.memoryLimit || 256
       );
 
-      console.log(`   Result: ${result.status}, Time: ${result.time}ms`);
+      console.log(`   Result: ${result.status}, Time: ${result.time || 0}ms`);
+
+      testCasesResult.push({
+        input: testCase.input,
+        expected: testCase.expectedOutput,
+        output: result.actual || '',
+        status: result.status,
+        time: result.time || 0,
+        error: result.error || ''
+      });
 
       if (result.status === 'passed') {
         passedTests++;
-        totalTime += result.time;
+        totalTime += result.time || 0;
+        // continue to next test
       } else {
+        // Update submission with failure and return
         let errorMessage = '';
         if (result.status === 'time_limit') {
           errorMessage = `Time Limit Exceeded on test case ${i + 1}`;
@@ -206,29 +217,36 @@ class JudgeService {
           errorMessage = `Wrong Answer on test case ${i + 1}`;
         }
 
-        await this.updateSubmissionError(
-          submissionId,
+        await Submission.findByIdAndUpdate(submissionId, {
+          status: result.status,
           errorMessage,
-          result.status,
-          passedTests,
-          testCases.length,
-          totalTime + result.time
-        );
+          testCasesPassed: passedTests,
+          totalTestCases: testCases.length,
+          executionTime: totalTime + (result.time || 0),
+          testCasesResult
+        });
         await this.cleanup(tempDir);
-        return;
+        return {
+          status: result.status,
+          testCasesPassed: passedTests,
+          totalTestCases: testCases.length,
+          executionTime: totalTime + (result.time || 0),
+          testCasesResult
+        };
       }
     }
 
-    // All tests passed!
+    // All tests passed
     console.log(`✅ All ${passedTests} test cases passed!`);
-    
+
     await Submission.findByIdAndUpdate(submissionId, {
       status: 'accepted',
       testCasesPassed: passedTests,
       totalTestCases: testCases.length,
       executionTime: totalTime,
       memory: 0,
-      errorMessage: null
+      errorMessage: null,
+      testCasesResult
     });
 
     await Problem.findByIdAndUpdate(problem._id, {
@@ -241,78 +259,46 @@ class JudgeService {
     });
 
     await this.cleanup(tempDir);
-    
+
     return {
       status: 'accepted',
       testCasesPassed: passedTests,
       totalTestCases: testCases.length,
-      executionTime: totalTime
+      executionTime: totalTime,
+      testCasesResult
     };
   }
 
-  async runTestCase(runCmd, cwd, input, expectedOutput, timeLimit, memoryLimit) {
+  async runTestCase(cmd, cwd, input, expectedOutput, timeLimit) {
     return new Promise((resolve) => {
-      const startTime = Date.now();
-      
-      console.log(`   Command: ${runCmd}`);
-      console.log(`   Input: "${input ? input.substring(0, 50) : '(empty)'}..."`);
-      
-      const child = exec(runCmd, {
-        cwd,
-        timeout: timeLimit,
-        maxBuffer: memoryLimit * 1024 * 1024,
-        windowsHide: true
-      }, (error, stdout, stderr) => {
-        const executionTime = Date.now() - startTime;
-
+      const start = Date.now();
+      const child = exec(cmd, { cwd, timeout: timeLimit, windowsHide: true }, (error, stdout, stderr) => {
+        const executionTime = Date.now() - start;
         if (error) {
           if (error.killed || error.signal === 'SIGTERM') {
-            console.log(`   ⏰ Time limit exceeded after ${executionTime}ms`);
             return resolve({ status: 'time_limit', time: executionTime });
           }
-          console.log(`   💥 Runtime error: ${stderr || error.message}`);
-          return resolve({ 
-            status: 'runtime_error', 
-            error: stderr || error.message,
-            time: executionTime
-          });
+          return resolve({ status: 'runtime_error', error: stderr || error.message, time: executionTime });
         }
 
-        // Normalize output: trim and standardize line endings
-        const actualOutput = stdout.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-        const expected = expectedOutput.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-
-        console.log(`   Expected: "${expected.substring(0, 50)}${expected.length > 50 ? '...' : ''}"`);
-        console.log(`   Actual: "${actualOutput.substring(0, 50)}${actualOutput.length > 50 ? '...' : ''}"`);
+        const actualOutput = (stdout || '').toString().trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        const expected = (expectedOutput || '').toString().trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
 
         if (actualOutput === expected) {
-          console.log(`   ✅ Matched!`);
-          return resolve({ 
-            status: 'passed', 
-            time: executionTime,
-            memory: 0
-          });
-        } else {
-          console.log(`   ❌ Mismatch`);
-          return resolve({ 
-            status: 'wrong_answer',
-            time: executionTime,
-            expected: expected,
-            actual: actualOutput
-          });
+          return resolve({ status: 'passed', time: executionTime, actual: actualOutput });
         }
+        return resolve({ status: 'wrong_answer', time: executionTime, actual: actualOutput, expected });
       });
 
-      // Write input to stdin
-      if (input !== null && input !== undefined) {
-        try {
+      // Write input to stdin if provided
+      try {
+        if (input !== null && input !== undefined) {
           child.stdin.write(input);
-          child.stdin.end();
-        } catch (stdinError) {
-          console.error('   Error writing to stdin:', stdinError);
         }
-      } else {
-        child.stdin.end();
+      } catch (e) {
+        // ignore
+      } finally {
+        try { child.stdin.end(); } catch (e) {}
       }
     });
   }

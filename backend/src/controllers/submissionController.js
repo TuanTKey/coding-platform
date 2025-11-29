@@ -53,7 +53,8 @@ exports.submitSolution = async (req, res) => {
     res.status(201).json({
       message: 'Submission received',
       submissionId: submission._id,
-      status: 'pending'
+      status: 'pending',
+      testCasesResult: submission.testCasesResult || []
     });
   } catch (error) {
     console.error('Submit solution error:', error);
@@ -77,7 +78,10 @@ exports.getSubmissionStatus = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    res.json({ submission });
+    res.json({ 
+      submission,
+      testCasesResult: submission.testCasesResult || []
+    });
   } catch (error) {
     console.error('Get submission error:', error);
     res.status(500).json({ error: 'Server error' });
