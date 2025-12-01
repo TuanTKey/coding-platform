@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../components/admin/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 const StatCard = ({ title, value, subtitle, children }) => (
   <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col justify-between">
@@ -50,17 +51,17 @@ const TeacherDashboard = () => {
       <main>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <StatCard title="Lớp được phân công" value={classes.length} subtitle={loading ? 'Đang tải...' : classes.map(c => c.name).join(', ') || 'Chưa có lớp'}>
-            <a href="/teacher/students" className="text-xs text-indigo-600 hover:underline">Xem chi tiết &rarr;</a>
+            <Link to="/teacher/classes" className="text-xs text-indigo-600 hover:underline">Xem chi tiết &rarr;</Link>
           </StatCard>
 
           <StatCard title="Học sinh" value={students.length} subtitle={loading ? 'Đang tải...' : 'Tổng số học sinh trong lớp'}>
-            <a href="/teacher/students" className="text-xs text-indigo-600 hover:underline">Quản lý học sinh</a>
+            <Link to="/teacher/students" className="text-xs text-indigo-600 hover:underline">Quản lý học sinh</Link>
           </StatCard>
 
           <StatCard title="Chức năng" value="Quản lý" subtitle="Quyền: quản lý sinh viên, điểm (phạm vi lớp)">
             <div className="flex space-x-2">
-              <button onClick={() => window.location.href = '/teacher/students'} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Quản lý Học sinh</button>
-              <button onClick={() => alert('Giao diện chấm/override sẽ được triển khai')} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm">Chấm & Override</button>
+              <button onClick={() => navigate('/teacher/students')} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Quản lý Học sinh</button>
+              <button onClick={() => navigate('/teacher/submissions')} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm">Chấm & Override</button>
             </div>
           </StatCard>
         </div>

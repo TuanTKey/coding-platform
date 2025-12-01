@@ -33,6 +33,7 @@ import ContestLeaderboard from './components/admin/ContestLeaderboard';
 import TeacherRoute from './components/teacher/TeacherRoute';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherStudents from './pages/TeacherStudents';
+import TeacherClasses from './pages/TeacherClasses';
 import Profile from './pages/Profile';
 
 // THÊM TRANG QUẢN LÝ LỚP HỌC
@@ -108,6 +109,7 @@ function AppRoutes() {
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
+        <Route path="/teacher/classes" element={<TeacherRoute><TeacherClasses /></TeacherRoute>} />
         <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
         {/* Profile routes */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
