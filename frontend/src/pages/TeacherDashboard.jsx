@@ -39,13 +39,17 @@ const TeacherDashboard = () => {
     <div className="p-6 max-w-7xl mx-auto">
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white text-2xl font-bold shadow">{user?.username?.[0]?.toUpperCase()}</div>
+          <div className="w-20 h-20 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white text-3xl font-extrabold shadow-lg">{user?.username?.[0]?.toUpperCase()}</div>
           <div>
-            <h1 className="text-3xl font-bold">Teacher Dashboard</h1>
+            <h1 className="text-4xl font-extrabold">Bảng điều khiển Giáo viên</h1>
             <div className="text-sm text-gray-500 mt-1">Xin chào, <span className="font-medium">{user?.fullName || user?.username}</span></div>
+            <div className="mt-2 text-xs text-gray-400">Vai trò: <span className="font-semibold text-indigo-600">{user?.role}</span></div>
           </div>
         </div>
-        <div className="text-sm text-gray-600">Role: <span className="font-semibold text-indigo-600">{user?.role}</span></div>
+        <div className="flex items-center gap-3">
+          <button onClick={() => window.location.href = '/teacher/classes'} className="px-4 py-2 bg-white border rounded-md shadow-sm">Lớp</button>
+          <button onClick={() => window.location.href = '/teacher/students'} className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow">Quản lý</button>
+        </div>
       </header>
 
       <main>
