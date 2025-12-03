@@ -24,8 +24,16 @@ const Profile = () => {
         setProfile(resp.data.user || resp.data);
       } catch (err) {
         console.error('Load profile', err);
-        alert('Không thể tải thông tin người dùng');
-        if (!id) navigate('/');
+        const status = err.response?.status;
+        const serverMsg = err.response?.data?.error || err.response?.data?.message;
+        const message = serverMsg || err.message || 'Không thể tải thông tin người dùng';
+        alert(`${message}${status ? ' (status: ' + status + ')' : ''}`);
+        if (status === 401) {
+          // not authenticated
+          navigate('/login');
+        } else if (!id) {
+          navigate('/');
+        }
       } finally {
         setLoading(false);
       }
