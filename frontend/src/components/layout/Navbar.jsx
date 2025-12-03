@@ -63,9 +63,9 @@ const Navbar = () => {
                     if (isStudent) {
                       return (
                         <>
-                          <Link to="/problems" className="text-gray-600 hover:text-indigo-600 text-sm">Bài tập</Link>
-                          <Link to="/contests" className="text-gray-600 hover:text-indigo-600 text-sm">Cuộc thi</Link>
-                          <Link to="/leaderboard" className="text-gray-600 hover:text-indigo-600 text-sm">Xếp hạng</Link>
+                          <Link to="/problems" className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm shadow-sm hover:scale-[1.02] transition">Bài tập</Link>
+                          <Link to="/contests" className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">Cuộc thi</Link>
+                          <Link to="/leaderboard" className="inline-flex items-center px-3 py-1.5 rounded-full text-sm text-indigo-600 hover:bg-indigo-50 transition">Xếp hạng</Link>
                         </>
                       );
                     }
@@ -81,9 +81,9 @@ const Navbar = () => {
                     // Fallback: treat unknown roles as student view
                     return (
                       <>
-                        <Link to="/problems" className="text-gray-600 hover:text-indigo-600 text-sm">Bài tập</Link>
-                        <Link to="/contests" className="text-gray-600 hover:text-indigo-600 text-sm">Cuộc thi</Link>
-                        <Link to="/leaderboard" className="text-gray-600 hover:text-indigo-600 text-sm">Xếp hạng</Link>
+                        <Link to="/problems" className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm shadow-sm hover:scale-[1.02] transition">Bài tập</Link>
+                        <Link to="/contests" className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">Cuộc thi</Link>
+                        <Link to="/leaderboard" className="inline-flex items-center px-3 py-1.5 rounded-full text-sm text-indigo-600 hover:bg-indigo-50 transition">Xếp hạng</Link>
                       </>
                     );
                   })()}

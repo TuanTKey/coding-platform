@@ -11,10 +11,14 @@ const Home = () => {
     totalContests: 0,
     totalProblems: 0
   });
+  const [recentProblems, setRecentProblems] = useState([]);
+  const [topUsers, setTopUsers] = useState([]);
 
   useEffect(() => {
     fetchContests();
     fetchStats();
+    fetchRecentProblems();
+    fetchTopUsers();
   }, []);
 
   const fetchContests = async () => {
@@ -25,6 +29,25 @@ const Home = () => {
       setContests(Array.isArray(contestsData) ? contestsData.slice(0, 3) : []);
     } catch (error) {
       console.error('Error fetching contests:', error);
+    }
+  };
+
+  const fetchRecentProblems = async () => {
+    try {
+      const res = await api.get('/problems?limit=6');
+      const problems = res.data.problems || res.data;
+      setRecentProblems(Array.isArray(problems) ? problems.slice(0, 6) : []);
+    } catch (error) {
+      console.error('Error fetching recent problems:', error);
+    }
+  };
+
+  const fetchTopUsers = async () => {
+    try {
+      const res = await api.get('/users/leaderboard?limit=5');
+      setTopUsers(res.data.leaderboard || []);
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
     }
   };
 
@@ -95,27 +118,27 @@ const Home = () => {
             <div className="flex flex-wrap justify-center gap-4 mb-12">
               {!user ? (
                 <>
-                  <Link 
-                    to="/register" 
-                    className="group bg-white hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold text-indigo-600 transition-all flex items-center gap-2 shadow-lg"
+                  <Link
+                    to="/register"
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-white text-indigo-600 font-semibold shadow-md hover:shadow-lg transition"
                   >
                     Bắt đầu ngay
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    <ChevronRight className="w-4 h-4" />
                   </Link>
-                  <Link 
-                    to="/problems" 
-                    className="border-2 border-white/50 hover:border-white text-white px-6 py-3 rounded-lg font-semibold transition-all hover:bg-white/10"
+                  <Link
+                    to="/problems"
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/30 text-white bg-white/5 hover:bg-white/10 transition"
                   >
                     Xem bài tập
                   </Link>
                 </>
               ) : (
-                <Link 
-                  to="/problems" 
-                  className="group bg-white hover:bg-gray-100 px-6 py-3 rounded-lg font-semibold text-indigo-600 transition-all flex items-center gap-2 shadow-lg"
+                <Link
+                  to="/problems"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-md hover:scale-[1.02] transition"
                 >
                   Làm bài tập
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-4 h-4" />
                 </Link>
               )}
             </div>
@@ -139,57 +162,111 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Contests Section */}
+      {/* Main content: Contests + Recent Problems + Leaderboard */}
       <div className="max-w-6xl mx-auto px-4 py-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-amber-500" />
-            Cuộc thi
-          </h2>
-          <Link to="/contests" className="text-indigo-600 hover:text-indigo-700 text-sm font-medium">
-            Xem tất cả →
-          </Link>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left: Contests (wide) */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                <Trophy className="w-5 h-5 text-amber-500" />
+                Cuộc thi sắp diễn ra
+              </h2>
+              <Link to="/contests" className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50">
+                Xem tất cả →
+              </Link>
+            </div>
+
+            {contests.length === 0 ? (
+              <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
+                <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500">Chưa có cuộc thi nào</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {contests.map((contest) => {
+                  const status = getContestStatus(contest);
+                  return (
+                    <Link
+                      key={contest._id}
+                      to={`/contests/${contest._id}`}
+                      className="group bg-white border border-gray-200 hover:border-indigo-300 rounded-xl p-5 transition-all hover:shadow-lg flex items-center justify-between"
+                    >
+                      <div>
+                        <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors text-lg">
+                          {contest.title}
+                        </h3>
+                        <p className="text-sm text-gray-500 mt-1 line-clamp-2">{contest.description}</p>
+                        <div className="mt-2 text-xs text-gray-400 flex items-center gap-4">
+                          <span className="flex items-center gap-1"><BookOpen className="w-4 h-4" />{contest.problems?.length || 0} bài</span>
+                          <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{getContestDuration(contest)}</span>
+                        </div>
+                      </div>
+
+                      <div className="text-right">
+                        <span className={`px-3 py-1 rounded text-sm font-medium ${statusBadge(status)}`}>{status}</span>
+                        <div className="text-xs text-gray-500 mt-2">{new Date(contest.startTime).toLocaleString()}</div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* Right: Recent Problems + Leaderboard compact */}
+          <div className="space-y-6">
+            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Bài tập mới</h3>
+                <Link to="/problems" className="inline-flex items-center px-3 py-1 rounded-full text-sm text-indigo-600 hover:bg-indigo-50">Xem tất cả</Link>
+              </div>
+              {recentProblems.length === 0 ? (
+                <p className="text-sm text-gray-500">Không có bài tập mới.</p>
+              ) : (
+                <ul className="space-y-3">
+                  {recentProblems.map(p => (
+                    <li key={p._id} className="flex items-start justify-between">
+                      <div>
+                        <Link to={`/problems/${p._id}`} className="font-medium text-gray-800 hover:text-indigo-600">{p.title}</Link>
+                        <div className="text-xs text-gray-500 mt-1 line-clamp-1">{p.description?.slice(0, 120)}</div>
+                      </div>
+                      <div className="text-sm text-gray-500">{p.difficulty || 'N/A'}</div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">Xếp hạng</h3>
+                <Link to="/leaderboard" className="inline-flex items-center px-3 py-1 rounded-full text-sm text-indigo-600 hover:bg-indigo-50">Chi tiết</Link>
+              </div>
+              {topUsers.length === 0 ? (
+                <p className="text-sm text-gray-500">Không có dữ liệu xếp hạng.</p>
+              ) : (
+                <ol className="space-y-2">
+                  {topUsers.map(u => (
+                    <li key={u._id} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center justify-center text-white font-semibold">{u.username?.[0]?.toUpperCase()}</div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-800">{u.username}</div>
+                          <div className="text-xs text-gray-500">{u.studentId ? `Mã SV: ${u.studentId}` : ''}</div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm font-semibold text-purple-600">{u.rating}</div>
+                        <div className="text-xs text-gray-500">{u.solvedProblems} solved</div>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </div>
         </div>
-        
-        {contests.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-xl p-8 text-center shadow-sm">
-            <Trophy className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">Chưa có cuộc thi nào</p>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-3 gap-4">
-            {contests.map((contest) => {
-              const status = getContestStatus(contest);
-              return (
-                <Link 
-                  key={contest._id}
-                  to={`/contests/${contest._id}`}
-                  className="group bg-white border border-gray-200 hover:border-indigo-300 rounded-xl p-5 transition-all hover:shadow-lg"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-gray-800 group-hover:text-indigo-600 transition-colors line-clamp-1">
-                      {contest.title}
-                    </h3>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusBadge(status)}`}>
-                      {status}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4" />
-                      {contest.problems?.length || 0} bài
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      {getContestDuration(contest)}
-                    </span>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
 
       {/* Features Section */}

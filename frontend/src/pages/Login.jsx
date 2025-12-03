@@ -34,7 +34,8 @@ const Login = () => {
       } else if (role === 'teacher') {
         navigate('/teacher');
       } else {
-        navigate('/problems');
+        // Students / regular users should land on the Home page first
+        navigate('/');
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
