@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String
   },
+  // Mã số sinh viên (student ID) - required for students, optional for others
+  studentId: {
+    type: String,
+    trim: true,
+    required: function() {
+      return this.role === 'user';
+    }
+  },
   solvedProblems: {
     type: Number,
     default: 0
@@ -113,5 +121,7 @@ userSchema.methods.isTeacherOfClass = function(className) {
 // Index cho tìm kiếm theo class và role
 userSchema.index({ class: 1, role: 1 });
 userSchema.index({ role: 1 });
+// Ensure studentId is unique when present (sparse index allows multiple nulls)
+userSchema.index({ studentId: 1 }, { unique: true, sparse: true });
 
 module.exports = mongoose.model('User', userSchema);

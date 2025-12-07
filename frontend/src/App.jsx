@@ -32,6 +32,7 @@ import ContestLeaderboard from './components/admin/ContestLeaderboard';
 // Teacher
 import TeacherRoute from './components/teacher/TeacherRoute';
 import TeacherDashboard from './pages/TeacherDashboard';
+import TeacherAdminDashboard from './components/teacher/TeacherAdminDashboard';
 import TeacherStudents from './pages/TeacherStudents';
 import TeacherClasses from './pages/TeacherClasses';
 import Profile from './pages/Profile';
@@ -73,7 +74,8 @@ function AppRoutes() {
   return (
     <>
       <Navbar />
-      <Routes>
+      <div className="app-container">
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
@@ -110,6 +112,7 @@ function AppRoutes() {
 
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
+        <Route path="/teacher/admin" element={<TeacherRoute><TeacherAdminDashboard /></TeacherRoute>} />
         <Route path="/teacher/classes" element={<TeacherRoute><TeacherClasses /></TeacherRoute>} />
         <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
         {/* Profile routes */}
@@ -119,7 +122,8 @@ function AppRoutes() {
         
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+        </Routes>
+      </div>
     </>
   );
 }

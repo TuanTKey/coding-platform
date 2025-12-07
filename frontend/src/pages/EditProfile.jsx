@@ -16,7 +16,7 @@ const EditProfile = () => {
       try {
         const resp = await api.get('/users/me');
         const me = resp.data.user || resp.data;
-        setForm({ fullName: me.fullName || '', email: me.email || '' });
+        setForm({ fullName: me.fullName || '', email: me.email || '', studentId: me.studentId || '' });
       } catch (err) {
         console.error('Load profile', err);
         alert('Không thể tải thông tin để chỉnh sửa');
@@ -63,6 +63,14 @@ const EditProfile = () => {
             <label className="block text-sm font-medium text-gray-700">Email</label>
             <input value={form.email} onChange={updateField('email')} className="mt-1 block w-full border rounded px-3 py-2" />
           </div>
+
+          {user?.role === 'user' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Mã số sinh viên</label>
+              <input value={form.studentId} readOnly className="mt-1 block w-full border rounded px-3 py-2 bg-gray-50" />
+              <p className="text-xs text-gray-500 mt-1">Mã số sinh viên được hệ thống cấp tự động và không thể chỉnh tay.</p>
+            </div>
+          )}
 
           <div className="flex gap-2">
             <button type="button" onClick={() => navigate(-1)} className="px-3 py-2 border rounded">Hủy</button>

@@ -204,7 +204,7 @@ const Home = () => {
             { icon: Terminal, title: 'Code Editor', desc: 'Monaco Editor với syntax highlighting', color: 'text-blue-500', bg: 'bg-blue-50' },
             { icon: Zap, title: 'AI Judge', desc: 'Chấm bài tự động bằng Gemini AI', color: 'text-green-500', bg: 'bg-green-50' },
             { icon: Trophy, title: 'Cuộc thi', desc: 'Thi đấu và xếp hạng realtime', color: 'text-amber-500', bg: 'bg-amber-50' },
-            { icon: Users, title: 'Lớp học', desc: 'Quản lý học sinh và bài tập', color: 'text-purple-500', bg: 'bg-purple-50' }
+            { icon: Users, title: 'Lớp học', desc: 'Quản lý bài tập và cuộc thi', color: 'text-purple-500', bg: 'bg-purple-50' }
           ].map((f, i) => (
             <div key={i} className={`${f.bg} border border-gray-100 rounded-xl p-4 hover:shadow-md transition-all`}>
               <f.icon className={`w-8 h-8 ${f.color} mb-3`} />

@@ -83,11 +83,18 @@ exports.getCurrentUser = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const { fullName, bio, avatar } = req.body;
+    const { fullName, bio, avatar, studentId } = req.body;
+
+    // studentId is managed by the system and cannot be set/changed by users via profile
+    if (typeof studentId !== 'undefined') {
+      return res.status(400).json({ error: 'Mã số sinh viên được cấp tự động, không thể chỉnh tay' });
+    }
+
+    const update = { fullName, bio, avatar };
 
     const user = await User.findByIdAndUpdate(
       req.user.id,
-      { fullName, bio, avatar },
+      update,
       { new: true, runValidators: true }
     ).select('-password');
 
@@ -97,6 +104,7 @@ exports.updateProfile = async (req, res) => {
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    if (error.code === 11000) return res.status(400).json({ error: 'Mã số sinh viên đã tồn tại' });
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -104,31 +112,53 @@ exports.updateProfile = async (req, res) => {
 // Get leaderboard
 exports.getLeaderboard = async (req, res) => {
   try {
-    const { page = 1, limit = 50, class: className } = req.query;
+    let { page = 1, limit = 50, class: className, role, search } = req.query;
+    page = Number(page) || 1;
+    limit = Number(limit) || 50;
 
-    let query = {};
+    const query = {};
     if (className && className !== 'all') {
       query.class = className;
     }
+    if (role && role !== 'all') {
+      query.role = role;
+    }
+    if (search) {
+      query.$or = [
+        { username: { $regex: search, $options: 'i' } },
+        { fullName: { $regex: search, $options: 'i' } }
+      ];
+    }
 
     const users = await User.find(query)
-      .select('username fullName class rating solvedProblems avatar')
+      .select('username fullName class rating solvedProblems avatar role studentId')
       .sort({ rating: -1, solvedProblems: -1 })
-      .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .lean();
 
     const count = await User.countDocuments(query);
 
     const leaderboard = users.map((user, index) => ({
       rank: (page - 1) * limit + index + 1,
-      ...user.toObject()
+      ...user
     }));
+
+    // counts per role (for UI tabs)
+    const rolesAgg = await User.aggregate([
+      { $group: { _id: '$role', count: { $sum: 1 } } }
+    ]);
+    const roleCounts = rolesAgg.reduce((acc, r) => {
+      acc[r._id] = r.count;
+      return acc;
+    }, {});
 
     res.json({
       leaderboard,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
-      total: count
+      total: count,
+      roleCounts
     });
   } catch (error) {
     console.error('Get leaderboard error:', error);
@@ -353,6 +383,78 @@ exports.getTeachers = async (req, res) => {
     });
   } catch (error) {
     console.error('Get teachers error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Admin: create a new user with selectable role
+exports.adminCreateUser = async (req, res) => {
+  try {
+    const { username, email, password, fullName, role = 'user', class: className, teacherClasses = [], studentId } = req.body;
+
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'username, email và password là bắt buộc' });
+    }
+
+    // Validate role
+    if (!['admin', 'teacher', 'user'].includes(role)) {
+      return res.status(400).json({ error: 'Role không hợp lệ' });
+    }
+
+    // Build user data
+    const userData = {
+      username,
+      email,
+      password,
+      fullName,
+      role
+    };
+
+    if (role === 'user') {
+      userData.class = className || 'NONE';
+      if (studentId) {
+        userData.studentId = String(studentId).trim();
+      } else {
+        // auto-generate studentId for new students
+        const { generateStudentId } = require('../utils/studentIdGenerator');
+        userData.studentId = await generateStudentId();
+      }
+    }
+
+    if (role === 'teacher') {
+      userData.teacherClasses = Array.isArray(teacherClasses) ? teacherClasses : (typeof teacherClasses === 'string' ? teacherClasses.split(',').map(s=>s.trim()).filter(Boolean) : []);
+      userData.class = 'TEACHER';
+    }
+
+    // Check duplicates for username/email and studentId (if provided)
+    const dupQuery = [{ username }, { email }];
+    if (userData.studentId) dupQuery.push({ studentId: userData.studentId });
+    const existing = await User.findOne({ $or: dupQuery });
+    if (existing) {
+      if (existing.studentId && userData.studentId && existing.studentId === userData.studentId) {
+        return res.status(400).json({ error: 'Mã số sinh viên đã tồn tại' });
+      }
+      return res.status(400).json({ error: 'Username hoặc email đã tồn tại' });
+    }
+
+    const newUser = await User.create(userData);
+
+    res.status(201).json({ message: 'Tạo người dùng thành công', user: {
+      id: newUser._id,
+      username: newUser.username,
+      email: newUser.email,
+      fullName: newUser.fullName,
+      role: newUser.role,
+      class: newUser.class,
+      teacherClasses: newUser.teacherClasses || [],
+      studentId: newUser.studentId || null
+    }});
+  } catch (error) {
+    console.error('Admin create user error:', error);
+    if (error.code === 11000) {
+      // Unique index error — could be studentId, username or email
+      return res.status(400).json({ error: 'Username, email hoặc mã số sinh viên đã tồn tại' });
+    }
     res.status(500).json({ error: 'Server error' });
   }
 };

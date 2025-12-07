@@ -3,11 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../components/admin/AuthContext';
 
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import { useAuth } from '../components/admin/AuthContext';
-
 const Profile = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -56,6 +51,7 @@ const Profile = () => {
             <div className="text-sm text-gray-600">Username: {profile.username}</div>
             <div className="text-sm text-gray-600">Email: {profile.email || '-'}</div>
             <div className="text-sm text-gray-600">Lớp: {profile.class || '-'}</div>
+            <div className="text-sm text-gray-600">Mã số sinh viên: {profile.studentId || '-'}</div>
           </div>
         </div>
 

@@ -108,7 +108,7 @@ const ClassDetail = () => {
               <span>Quay lại Quản lý Lớp</span>
             </Link>
             <h1 className="text-4xl font-bold text-gray-800 mb-2">Lớp {className}</h1>
-            <p className="text-gray-600">Quản lý học sinh và theo dõi tiến độ</p>
+            <p className="text-gray-600">Quản lý bài tập và theo dõi tiến độ</p>
           </div>
         </div>
 
@@ -189,6 +189,9 @@ const ClassDetail = () => {
                       <p className="text-xs text-gray-500">
                         {student.email || 'No email'}
                       </p>
+                      {student.studentId && (
+                        <p className="text-xs text-gray-500">Mã SV: {student.studentId}</p>
+                      )}
                     </div>
                   </div>
                   

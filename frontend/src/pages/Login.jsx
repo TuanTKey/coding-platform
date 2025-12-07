@@ -27,8 +27,15 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(formData);
-      navigate('/problems');
+      const data = await login(formData);
+      const role = data?.user?.role || data?.role || (data && data.user && data.user.role);
+      if (role === 'admin') {
+        navigate('/admin');
+      } else if (role === 'teacher') {
+        navigate('/teacher');
+      } else {
+        navigate('/problems');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed');
     } finally {
@@ -65,6 +72,7 @@ const Login = () => {
               <input
                 type="text"
                 name="username"
+                autoComplete="username"
                 value={formData.username}
                 onChange={handleChange}
                 required
@@ -83,6 +91,7 @@ const Login = () => {
               <input
                 type="password"
                 name="password"
+                autoComplete="current-password"
                 value={formData.password}
                 onChange={handleChange}
                 required

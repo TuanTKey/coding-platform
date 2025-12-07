@@ -18,6 +18,7 @@ const AdminClasses = () => {
     teacherId: ''
   });
   const [error, setError] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetchClasses();
@@ -89,33 +90,48 @@ const AdminClasses = () => {
   const handleCreateClass = async (e) => {
     e.preventDefault();
     try {
+      setCreating(true);
+      setError('');
       console.log('🔄 Creating class:', formData);
-      const response = await api.post('/admin/classes', formData);
+      // Trim name for safety
+      const payload = { ...formData, name: (formData.name || '').trim() };
+      const response = await api.post('/admin/classes', payload);
       console.log('✅ Class created:', response.data);
-      alert('Tạo lớp thành công!');
+      // close modal and refresh
       setShowCreateModal(false);
       setFormData({ name: '', description: '', teacherId: '' });
       fetchClasses();
     } catch (error) {
       console.error('❌ Error creating class:', error);
-      alert(error.response?.data?.error || 'Không thể tạo lớp');
+      const msg = error.response?.data?.error || error.message || 'Không thể tạo lớp';
+      setError(msg);
+      // keep modal open to let admin correct
+    } finally {
+      setCreating(false);
     }
   };
 
   const handleEditClass = async (e) => {
     e.preventDefault();
     try {
+      setCreating(true);
+      setError('');
       console.log('🔄 Updating class:', selectedClass, formData);
-      const response = await api.put(`/admin/classes/${selectedClass}`, formData);
-      console.log('✅ Class updated:', response.data);
-      alert('Cập nhật lớp thành công!');
-      setShowEditModal(false);
-      setSelectedClass(null);
+      // Trim and uppercase name client-side for better UX
+      const payload = { ...formData, name: (formData.name || '').trim() };
+      const response = await api.post('/admin/classes', payload);
+      console.log('✅ Class created:', response.data);
+      // show success and refresh
+      setShowCreateModal(false);
       setFormData({ name: '', description: '', teacherId: '' });
       fetchClasses();
+      fetchClasses();
     } catch (error) {
-      console.error('❌ Error updating class:', error);
+      const msg = error.response?.data?.error || error.message || 'Không thể tạo lớp';
+      setError(msg);
+      // keep modal open so admin can correct
       alert(error.response?.data?.error || 'Không thể cập nhật lớp');
+      setCreating(false);
     }
   };
 
@@ -391,9 +407,17 @@ const AdminClasses = () => {
                     </button>
                     <button
                       type="submit"
-                      className="px-6 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700"
+                      disabled={creating}
+                      className={`px-6 py-2 rounded-lg font-semibold ${creating ? 'bg-gray-300 text-gray-700' : 'bg-indigo-600 text-white hover:bg-indigo-700'}`}
                     >
-                      Tạo Lớp
+                      {creating ? (
+                        <span className="inline-flex items-center space-x-2">
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                          <span>Đang tạo...</span>
+                        </span>
+                      ) : (
+                        'Tạo Lớp'
+                      )}
                     </button>
                   </div>
                 </form>

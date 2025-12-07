@@ -1,9 +1,10 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { generateStudentId } = require('../utils/studentIdGenerator');
 
 exports.register = async (req, res) => {
   try {
-    const { username, email, password, fullName, class: userClass } = req.body;
+    const { username, email, password, fullName, class: userClass, studentId } = req.body;
 
     // Validate
     if (!username || !email || !password) {
@@ -18,14 +19,25 @@ exports.register = async (req, res) => {
       });
     }
 
-    // Check existing user
+    // If studentId not provided, auto-generate one
+    let finalStudentId = studentId;
+    if (!finalStudentId) {
+      finalStudentId = await generateStudentId();
+    } else {
+      finalStudentId = String(finalStudentId).trim();
+      if (!finalStudentId) {
+        finalStudentId = await generateStudentId();
+      }
+    }
+
+    // Check existing user or studentId
     const existingUser = await User.findOne({ 
-      $or: [{ email }, { username }] 
+      $or: [{ email }, { username }, { studentId: finalStudentId }]
     });
 
     if (existingUser) {
       return res.status(400).json({ 
-        error: 'Username or email already exists' 
+        error: 'Username, email hoặc mã số sinh viên đã tồn tại' 
       });
     }
 
@@ -36,7 +48,8 @@ exports.register = async (req, res) => {
       password,
       fullName,
       class: userClass,
-      role: 'user'
+      role: 'user',
+      studentId: String(finalStudentId)
     });
 
     // Generate token
@@ -54,7 +67,8 @@ exports.register = async (req, res) => {
         username: user.username,
         email: user.email,
         fullName: user.fullName,
-        role: user.role
+        role: user.role,
+        studentId: user.studentId || null
       }
     });
   } catch (error) {

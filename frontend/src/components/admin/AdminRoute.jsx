@@ -16,7 +16,8 @@ const AdminRoute = ({ children }) => {
     return <Navigate to="/login" />;
   }
 
-  if (user.role !== 'admin') {
+  // Allow both admin and teacher roles to access admin routes
+  if (!(user.role === 'admin' || user.role === 'teacher')) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">

@@ -90,6 +90,9 @@ router.post('/admin/teachers', authenticate, isAdmin, async (req, res) => {
   }
 });
 
+// TẠO NGƯỜI DÙNG (ADMIN ONLY) - cho phép chọn role
+router.post('/admin/users', authenticate, isAdmin, userController.adminCreateUser);
+
 // LẤY THÔNG TIN GIÁO VIÊN HIỆN TẠI, DANH SÁCH LỚP VÀ HỌC SINH TRONG LÔI
 router.get('/teacher/me', authenticate, async (req, res) => {
   try {
@@ -114,7 +117,7 @@ router.get('/teacher/me', authenticate, async (req, res) => {
 
     // Lấy học sinh thuộc các lớp này (dựa theo tên lớp)
     const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
-    const students = await User.find({ class: { $in: classNames } }).select('username email fullName class').lean();
+    const students = await User.find({ class: { $in: classNames } }).select('username email fullName class studentId').lean();
 
     res.json({ teacher: { id: current._id, username: current.username, email: current.email, fullName: current.fullName }, classes, students });
   } catch (err) {
@@ -142,7 +145,7 @@ router.get('/teacher/students', authenticate, async (req, res) => {
     const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
 
     const students = await User.find({ class: { $in: classNames }, role: 'user' })
-      .select('username email fullName class createdAt')
+      .select('username email fullName class createdAt studentId')
       .lean();
 
     res.json({ classes, students });

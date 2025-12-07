@@ -86,6 +86,9 @@ const Leaderboard = () => {
                     {user.fullName && (
                       <p className="text-sm text-gray-600">{user.fullName}</p>
                     )}
+                    {user.studentId && (
+                      <p className="text-xs text-gray-500">Mã SV: {user.studentId}</p>
+                    )}
                   </div>
                 </div>
               </div>

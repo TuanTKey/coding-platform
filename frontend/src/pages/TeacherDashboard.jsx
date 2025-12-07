@@ -48,7 +48,7 @@ const TeacherDashboard = () => {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => window.location.href = '/teacher/classes'} className="px-4 py-2 bg-white border rounded-md shadow-sm">Lớp</button>
-          <button onClick={() => window.location.href = '/teacher/students'} className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow">Quản lý</button>
+          <button onClick={() => window.location.href = '/teacher/admin'} className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow">Quản lý bài tập &amp; cuộc thi</button>
         </div>
       </header>
 
@@ -59,7 +59,7 @@ const TeacherDashboard = () => {
           </StatCard>
 
           <StatCard title="Học sinh" value={students.length} subtitle={loading ? 'Đang tải...' : 'Tổng số học sinh trong lớp'}>
-            <Link to="/teacher/students" className="text-xs text-indigo-600 hover:underline">Quản lý học sinh</Link>
+            <Link to="/teacher/admin" className="text-xs text-indigo-600 hover:underline">Quản lý bài tập &amp; cuộc thi</Link>
           </StatCard>
 
           <StatCard title="Chức năng" value="Quản lý" subtitle="Quyền: quản lý sinh viên, điểm (phạm vi lớp)">

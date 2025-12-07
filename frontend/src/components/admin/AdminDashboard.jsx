@@ -28,13 +28,11 @@ const AdminDashboard = () => {
         api.get('/problems?limit=1&page=1'),
         api.get('/submissions/admin/all?limit=10'),
         api.get('/contests?limit=1&page=1'),
-        api.get('/users/classes/all')
+        // Use canonical Class documents endpoint so counts match Admin Classes view
+        api.get('/admin/classes')
       ]);
 
-      console.log('📊 API Responses:', {
-        users: usersRes.data,
-        classes: classesRes.data
-      });
+      console.log('📊 API Responses:', { users: usersRes.data, classes: classesRes.data });
 
       setStats({
         totalUsers: usersRes.data.totalUsers || 0,
@@ -43,7 +41,8 @@ const AdminDashboard = () => {
         totalProblems: problemsRes.data.total || 0,
         totalSubmissions: submissionsRes.data.total || 0,
         totalContests: contestsRes.data.total || 0,
-        totalClasses: classesRes.data.total || 0,
+        // admin/classes returns `classes` array (server-side). Use its length as canonical total.
+        totalClasses: (classesRes.data.classes || []).length || classesRes.data.total || 0,
         recentSubmissions: submissionsRes.data.submissions || []
       });
 
@@ -69,7 +68,7 @@ const AdminDashboard = () => {
       value: stats.totalUsers,
       icon: Users,
       color: 'from-blue-500 to-blue-600',
-      link: '/admin/users',
+      link: '/admin/users?role=admin',
       description: `${stats.totalStudents} học sinh, ${stats.totalTeachers} giáo viên`
     },
     {
@@ -168,7 +167,7 @@ const AdminDashboard = () => {
                 + Tạo Cuộc thi Mới
               </Link>
               <Link
-                to="/admin/users"
+                to="/admin/users?role=admin"
                 className="block w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-blue-700 hover:to-cyan-700 transition text-center"
               >
                 Quản lý Users

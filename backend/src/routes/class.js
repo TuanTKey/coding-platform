@@ -32,30 +32,62 @@ router.post('/', authenticate, isAdmin, async (req, res) => {
       }
     }
 
-    // Tạo Class và cập nhật teacher trong transaction để tránh inconsistent state
-    const session = await Class.startSession();
-    session.startTransaction();
+    // Detect whether server is part of a replica set (supports transactions).
+    let supportsTransactions = false;
     try {
-      const cls = await Class.create([{
-        name: className,
-        slug: (className || '').toLowerCase().replace(/\s+/g, '-'),
-        description: description || '',
-        teacherId: teacherId || null
-      }], { session });
+      const admin = Class.db.admin();
+      const info = await admin.command({ hello: 1 });
+      supportsTransactions = !!info.setName;
+    } catch (detErr) {
+      console.warn('Could not determine replica set status, assuming no transactions:', detErr.message);
+      supportsTransactions = false;
+    }
 
-      if (teacherId) {
-        await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } }, { session });
+    if (supportsTransactions) {
+      // Use transactions when supported
+      const session = await Class.startSession();
+      try {
+        session.startTransaction();
+        const cls = await Class.create([{
+          name: className,
+          slug: (className || '').toLowerCase().replace(/\s+/g, '-'),
+          description: description || '',
+          teacherId: teacherId || null
+        }], { session });
+
+        if (teacherId) {
+          await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } }, { session });
+        }
+
+        await session.commitTransaction();
+        session.endSession();
+
+        return res.status(201).json({ message: 'Tạo lớp thành công', class: cls[0] });
+      } catch (txErr) {
+        try { await session.abortTransaction(); } catch (e) { /* ignore */ }
+        try { session.endSession(); } catch (e) { /* ignore */ }
+        console.error('Transaction create class error:', txErr);
+        return res.status(500).json({ error: 'Không thể tạo lớp' });
       }
+    } else {
+      // Non-transactional fallback for standalone servers
+      try {
+        const cls = await Class.create({
+          name: className,
+          slug: (className || '').toLowerCase().replace(/\s+/g, '-'),
+          description: description || '',
+          teacherId: teacherId || null
+        });
 
-      await session.commitTransaction();
-      session.endSession();
+        if (teacherId) {
+          await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } });
+        }
 
-      res.status(201).json({ message: 'Tạo lớp thành công', class: cls[0] });
-    } catch (txErr) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Transaction create class error:', txErr);
-      return res.status(500).json({ error: 'Không thể tạo lớp' });
+        return res.status(201).json({ message: 'Tạo lớp thành công (no-transaction)', class: cls });
+      } catch (err) {
+        console.error('Create class (no-transaction) error:', err);
+        return res.status(500).json({ error: 'Không thể tạo lớp' });
+      }
     }
   } catch (error) {
     console.error('Create class error:', error);
@@ -139,7 +171,7 @@ router.get('/:className/students', authenticate, isAdmin, async (req, res) => {
     const skip = (page - 1) * limit;
 
     const students = await User.find({ class: className })
-      .select('username fullName email solvedProblems rating role')
+      .select('username fullName email solvedProblems rating role studentId')
       .sort({ username: 1 })
       .skip(Number(skip))
       .limit(Number(limit))
@@ -205,32 +237,62 @@ router.put('/:className', authenticate, isAdmin, async (req, res) => {
       }
     }
 
-    // Use transaction to update Class and teacher assignments atomically
-    const session = await Class.startSession();
-    session.startTransaction();
+    // Determine transaction support
+    let supportsTransactions = false;
     try {
-      // Remove this class from any current teachers
-      await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } }, { session });
+      const admin = Class.db.admin();
+      const info = await admin.command({ hello: 1 });
+      supportsTransactions = !!info.setName;
+    } catch (detErr) {
+      console.warn('Could not determine replica set status for update, assuming no transactions:', detErr.message);
+      supportsTransactions = false;
+    }
 
-      // Assign to new teacher
-      if (teacherId) {
-        await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } }, { session });
+    if (supportsTransactions) {
+      const session = await Class.startSession();
+      try {
+        session.startTransaction();
+        // Remove this class from any current teachers
+        await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } }, { session });
+
+        // Assign to new teacher
+        if (teacherId) {
+          await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } }, { session });
+        }
+
+        // Update class doc
+        cls.description = description || cls.description;
+        cls.teacherId = teacherId || null;
+        await cls.save({ session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.json({ message: 'Cập nhật lớp thành công', class: cls });
+      } catch (txErr) {
+        try { await session.abortTransaction(); } catch (e) { /* ignore */ }
+        try { session.endSession(); } catch (e) { /* ignore */ }
+        console.error('Transaction update class error:', txErr);
+        return res.status(500).json({ error: 'Không thể cập nhật lớp' });
       }
+    } else {
+      try {
+        // Non-transactional update
+        await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } });
 
-      // Update class doc
-      cls.description = description || cls.description;
-      cls.teacherId = teacherId || null;
-      await cls.save({ session });
+        if (teacherId) {
+          await User.findByIdAndUpdate(teacherId, { $addToSet: { teacherClasses: className } });
+        }
 
-      await session.commitTransaction();
-      session.endSession();
+        cls.description = description || cls.description;
+        cls.teacherId = teacherId || null;
+        await cls.save();
 
-      res.json({ message: 'Cập nhật lớp thành công', class: cls });
-    } catch (txErr) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Transaction update class error:', txErr);
-      return res.status(500).json({ error: 'Không thể cập nhật lớp' });
+        res.json({ message: 'Cập nhật lớp thành công (no-transaction)', class: cls });
+      } catch (err) {
+        console.error('Update class (no-transaction) error:', err);
+        return res.status(500).json({ error: 'Không thể cập nhật lớp' });
+      }
     }
   } catch (error) {
     console.error('Update class error:', error);
@@ -247,25 +309,51 @@ router.delete('/:className', authenticate, isAdmin, async (req, res) => {
       return res.status(404).json({ error: 'Lớp không tồn tại' });
     }
 
-    // Start transaction: delete Class doc, unset users' class, remove from teachers
-    const session = await Class.startSession();
-    session.startTransaction();
+    // Determine transaction support for delete
+    let supportsTransactions = false;
     try {
-      await Class.deleteOne({ _id: cls._id }, { session });
+      const admin = Class.db.admin();
+      const info = await admin.command({ hello: 1 });
+      supportsTransactions = !!info.setName;
+    } catch (detErr) {
+      console.warn('Could not determine replica set status for delete, assuming no transactions:', detErr.message);
+      supportsTransactions = false;
+    }
 
-      await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } }, { session });
+    if (supportsTransactions) {
+      const session = await Class.startSession();
+      try {
+        session.startTransaction();
 
-      await User.updateMany({ class: className }, { $unset: { class: 1 } }, { session });
+        await Class.deleteOne({ _id: cls._id }, { session });
 
-      await session.commitTransaction();
-      session.endSession();
+        await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } }, { session });
 
-      res.json({ message: 'Xóa lớp thành công', className });
-    } catch (txErr) {
-      await session.abortTransaction();
-      session.endSession();
-      console.error('Transaction delete class error:', txErr);
-      return res.status(500).json({ error: 'Không thể xóa lớp' });
+        await User.updateMany({ class: className }, { $unset: { class: 1 } }, { session });
+
+        await session.commitTransaction();
+        session.endSession();
+
+        res.json({ message: 'Xóa lớp thành công', className });
+      } catch (txErr) {
+        try { await session.abortTransaction(); } catch (e) { /* ignore */ }
+        try { session.endSession(); } catch (e) { /* ignore */ }
+        console.error('Transaction delete class error:', txErr);
+        return res.status(500).json({ error: 'Không thể xóa lớp' });
+      }
+    } else {
+      try {
+        await Class.deleteOne({ _id: cls._id });
+
+        await User.updateMany({ teacherClasses: className }, { $pull: { teacherClasses: className } });
+
+        await User.updateMany({ class: className }, { $unset: { class: 1 } });
+
+        res.json({ message: 'Xóa lớp thành công (no-transaction)', className });
+      } catch (err) {
+        console.error('Delete class (no-transaction) error:', err);
+        return res.status(500).json({ error: 'Không thể xóa lớp' });
+      }
     }
   } catch (error) {
     console.error('Delete class error:', error);

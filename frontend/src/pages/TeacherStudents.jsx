@@ -110,15 +110,17 @@ const TeacherStudents = () => {
                     <table className="w-full text-left">
                       <thead>
                         <tr className="text-sm text-gray-600">
-                          <th className="py-2">Username</th>
-                          <th className="py-2">Email</th>
-                          <th className="py-2">Hành động</th>
+                            <th className="py-2">Username</th>
+                            <th className="py-2">Mã SV</th>
+                            <th className="py-2">Email</th>
+                            <th className="py-2">Hành động</th>
                         </tr>
                       </thead>
                       <tbody>
                         {students.filter(s => s.class === c.name).map(s => (
                           <tr key={s._id} className="border-t">
                             <td className="py-2">{s.username}</td>
+                            <td className="py-2">{s.studentId || '-'}</td>
                             <td className="py-2">{s.email}</td>
                             <td className="py-2">
                               <div className="flex items-center gap-3">

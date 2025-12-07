@@ -45,7 +45,7 @@ const TeacherClasses = () => {
                 <div className="text-sm text-gray-500">{c.description || 'Không có mô tả'}</div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => navigate(`/teacher/students?classId=${c._id}`)} className="px-3 py-1.5 bg-indigo-600 text-white rounded">Quản lý học sinh</button>
+                <button onClick={() => navigate(`/teacher/students?classId=${c._id}`)} className="px-3 py-1.5 bg-indigo-600 text-white rounded">Quản lý lớp học</button>
               </div>
             </div>
           ))}
