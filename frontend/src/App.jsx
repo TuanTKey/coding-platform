@@ -33,6 +33,7 @@ import ContestLeaderboard from './components/admin/ContestLeaderboard';
 import TeacherRoute from './components/teacher/TeacherRoute';
 import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherStudents from './pages/TeacherStudents';
+import Profile from './pages/Profile';
 
 // THÊM TRANG QUẢN LÝ LỚP HỌC
 import AdminClasses from './components/admin/AdminClasses';
@@ -53,12 +54,26 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppRoutes() {
+  const RootRedirect = () => {
+    const { user, loading } = useAuth();
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        </div>
+      );
+    }
+    if (!user) return <Home />;
+    if (user.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user.role === 'teacher') return <Navigate to="/teacher" replace />;
+    return <Home />;
+  };
   return (
     <>
       <Navbar />
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/leaderboard" element={<Leaderboard />} />
@@ -94,6 +109,9 @@ function AppRoutes() {
         {/* Teacher Routes */}
         <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
         <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
+        {/* Profile routes */}
+        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/users/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         
         {/* Fallback Route */}
         <Route path="*" element={<Navigate to="/" />} />

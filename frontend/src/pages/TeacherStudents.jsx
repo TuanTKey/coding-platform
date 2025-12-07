@@ -3,9 +3,11 @@ import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
 const TeacherStudents = () => {
+  const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [studentId, setStudentId] = useState('');
+  const [classId, setClassId] = useState('');
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
@@ -27,6 +29,19 @@ const TeacherStudents = () => {
 
   useEffect(() => { load(); }, []);
 
+  const handleAdd = async (e) => {
+    e.preventDefault();
+    if (!studentId || !classId) return alert('studentId và classId là bắt buộc');
+    try {
+      await api.post('/users/teacher/students', { studentId, classId });
+      setStudentId('');
+      await load();
+      alert('Thêm học sinh thành công');
+    } catch (err) {
+      console.error('Add student', err);
+      alert(err.response?.data?.error || 'Lỗi khi thêm học sinh');
+    }
+  };
 
   const handleRemove = async (sid, cid) => {
     if (!confirm('Bạn có chắc muốn xóa học sinh khỏi lớp?')) return;
@@ -83,7 +98,10 @@ const TeacherStudents = () => {
                         <td className="py-2">{s.username}</td>
                         <td className="py-2">{s.email}</td>
                         <td className="py-2">
-                          <button onClick={() => handleRemove(s._id, c._id)} className="text-red-600">Xóa</button>
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => navigate(`/users/${s._id}`)} className="text-indigo-600 text-sm">Xem</button>
+                            <button onClick={() => handleRemove(s._id, c._id)} className="text-red-600 text-sm">Xóa</button>
+                          </div>
                         </td>
                       </tr>
                     ))}
