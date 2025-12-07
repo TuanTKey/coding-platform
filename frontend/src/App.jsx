@@ -35,6 +35,7 @@ import TeacherDashboard from './pages/TeacherDashboard';
 import TeacherStudents from './pages/TeacherStudents';
 import TeacherClasses from './pages/TeacherClasses';
 import Profile from './pages/Profile';
+import EditProfile from './pages/EditProfile';
 
 // THÊM TRANG QUẢN LÝ LỚP HỌC
 import AdminClasses from './components/admin/AdminClasses';
@@ -113,6 +114,7 @@ function AppRoutes() {
         <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
         {/* Profile routes */}
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
         <Route path="/users/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
         
         {/* Fallback Route */}
