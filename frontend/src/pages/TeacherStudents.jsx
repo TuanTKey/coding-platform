@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 const TeacherStudents = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialClassParam = searchParams.get('classId') || 'all';
+
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [studentId, setStudentId] = useState('');
-  const [classId, setClassId] = useState('');
+  const [classId, setClassId] = useState(initialClassParam === 'all' ? '' : initialClassParam);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [selectedClass, setSelectedClass] = useState('all');
@@ -80,36 +83,39 @@ const TeacherStudents = () => {
         {classes.length === 0 ? (
           <p className="text-sm text-gray-500">Bạn chưa được phân công lớp nào.</p>
         ) : (
-          classes.map(c => (
-            <div key={c._id} className="mb-4">
-              <div className="font-semibold">{c.name} - {c.description}</div>
-              <div className="mt-2">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="text-sm text-gray-600">
-                      <th className="py-2">Username</th>
-                      <th className="py-2">Email</th>
-                      <th className="py-2">Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.filter(s => s.class === c.name).map(s => (
-                      <tr key={s._id} className="border-t">
-                        <td className="py-2">{s.username}</td>
-                        <td className="py-2">{s.email}</td>
-                        <td className="py-2">
-                          <div className="flex items-center gap-3">
-                            <button onClick={() => navigate(`/users/${s._id}`)} className="text-indigo-600 text-sm">Xem</button>
-                            <button onClick={() => handleRemove(s._id, c._id)} className="text-red-600 text-sm">Xóa</button>
-                          </div>
-                        </td>
+          (() => {
+            const classesToShow = selectedClass === 'all' ? classes : classes.filter(c => c._id === selectedClass);
+            return classesToShow.map(c => (
+              <div key={c._id} className="mb-4">
+                <div className="font-semibold">{c.name} - {c.description}</div>
+                <div className="mt-2">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="text-sm text-gray-600">
+                        <th className="py-2">Username</th>
+                        <th className="py-2">Email</th>
+                        <th className="py-2">Hành động</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {students.filter(s => s.class === c.name).map(s => (
+                        <tr key={s._id} className="border-t">
+                          <td className="py-2">{s.username}</td>
+                          <td className="py-2">{s.email}</td>
+                          <td className="py-2">
+                            <div className="flex items-center gap-3">
+                              <button onClick={() => navigate(`/users/${s._id}`)} className="text-indigo-600 text-sm">Xem</button>
+                              <button onClick={() => handleRemove(s._id, c._id)} className="text-red-600 text-sm">Xóa</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          ))
+            ));
+          })()
         )}
       </div>
     </div>
