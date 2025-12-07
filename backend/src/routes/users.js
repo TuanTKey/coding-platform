@@ -6,10 +6,11 @@ const User = require('../models/User');
 
 // Public routes
 router.get('/leaderboard', userController.getLeaderboard);
-router.get('/:id', userController.getUserProfile);
 
 // Authenticated routes
+// `/me` must be defined before `/:id` to avoid treating 'me' as an id param
 router.get('/me', authenticate, userController.getCurrentUser);
+router.get('/:id', userController.getUserProfile);
 router.put('/me', authenticate, userController.updateProfile);
 
 // Class management routes
