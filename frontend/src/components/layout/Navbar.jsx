@@ -1,10 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../admin/AuthContext';
-import { Code2, Trophy, BarChart3, LogOut, Shield, Home, FileCode } from 'lucide-react';
-
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../admin/AuthContext';
-import { Code2, Trophy, BarChart3, Search, Shield } from 'lucide-react';
+import { Code2, Search, Shield, BarChart3 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 const Navbar = () => {
@@ -67,13 +63,16 @@ const Navbar = () => {
                       <Link to="/leaderboard" className="text-gray-600 hover:text-indigo-600">Xếp hạng</Link>
                     </>
                   ) : (
-                    <Link to={user.role === 'admin' ? '/admin' : '/teacher'} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow">{user.role === 'admin' ? <Shield size={16} /> : <BarChart3 size={16} />}<span>Quản lý</span></Link>
+                    <Link to={user.role === 'admin' ? '/admin' : '/teacher'} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-4 py-2 rounded-lg shadow">
+                      {user.role === 'admin' ? <Shield size={16} /> : <BarChart3 size={16} />}
+                      <span>Quản lý</span>
+                    </Link>
                   )}
                 </div>
 
                 <div className="relative" ref={dropdownRef}>
                   <button onClick={() => setOpen(v => !v)} className="flex items-center gap-3 bg-white border rounded-xl px-3 py-1 shadow-sm hover:shadow-md">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold">{user.username[0]?.toUpperCase()}</div>
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold">{user.username?.[0]?.toUpperCase()}</div>
                     <div className="hidden sm:flex flex-col text-left">
                       <span className="text-sm font-medium text-gray-800">{user.fullName || user.username}</span>
                       <span className="text-xs text-gray-500">{user.role}</span>
@@ -97,14 +96,12 @@ const Navbar = () => {
               </div>
             )}
 
-            {/* Mobile menu toggle */}
             <button onClick={() => setMobileOpen(v => !v)} className="md:hidden text-gray-600">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
         </div>
 
-        {/* Mobile menu content */}
         {mobileOpen && (
           <div className="md:hidden border-t border-gray-100 py-2">
             <div className="px-4 flex flex-col gap-2">
@@ -121,71 +118,6 @@ const Navbar = () => {
                   <Link to="/login" className="py-2">Đăng nhập</Link>
                   <Link to="/register" className="py-2">Đăng ký</Link>
                 </>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
-  );
-};
-
-export default Navbar;
-                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
-                >
-                  Đăng ký
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile Navigation - Only show when user is logged in */}
-        {user && (
-          <div className="md:hidden border-t border-gray-200 mt-2 pt-3 pb-2">
-            <div className="flex justify-around items-center">
-              {user.role === 'user' ? (
-                <>
-                  <Link 
-                    to="/" 
-                    className="flex flex-col items-center space-y-1 text-gray-600 hover:text-purple-600 transition-all"
-                  >
-                    <Home size={20} />
-                    <span className="text-xs font-medium">Trang chủ</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/problems" 
-                    className="flex flex-col items-center space-y-1 text-gray-600 hover:text-purple-600 transition-all"
-                  >
-                    <FileCode size={20} />
-                    <span className="text-xs font-medium">Bài tập</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/contests" 
-                    className="flex flex-col items-center space-y-1 text-gray-600 hover:text-purple-600 transition-all"
-                  >
-                    <Trophy size={20} />
-                    <span className="text-xs font-medium">Cuộc thi</span>
-                  </Link>
-                  
-                  <Link 
-                    to="/leaderboard" 
-                    className="flex flex-col items-center space-y-1 text-gray-600 hover:text-purple-600 transition-all"
-                  >
-                    <BarChart3 size={20} />
-                    <span className="text-xs font-medium">Xếp hạng</span>
-                  </Link>
-                </>
-              ) : (
-                <Link
-                  to={user.role === 'admin' ? '/admin' : '/teacher'}
-                  className="flex flex-col items-center space-y-1 text-indigo-600 hover:text-indigo-700 transition-all"
-                >
-                  {user.role === 'admin' ? <Shield size={20} /> : <BarChart3 size={20} />}
-                  <span className="text-xs font-medium">Quản lý</span>
-                </Link>
               )}
             </div>
           </div>
