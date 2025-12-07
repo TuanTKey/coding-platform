@@ -6,9 +6,9 @@ const TeacherStudents = () => {
   const [classes, setClasses] = useState([]);
   const [students, setStudents] = useState([]);
   const [studentId, setStudentId] = useState('');
-  const [classId, setClassId] = useState('');
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [query, setQuery] = useState('');
+  const [selectedClass, setSelectedClass] = useState('all');
 
   const load = async () => {
     setLoading(true);
@@ -16,7 +16,7 @@ const TeacherStudents = () => {
       const resp = await api.get('/users/teacher/students');
       setClasses(resp.data.classes || []);
       setStudents(resp.data.students || []);
-      if ((resp.data.classes || []).length > 0 && !classId) setClassId(resp.data.classes[0]._id);
+      if ((resp.data.classes || []).length > 0 && selectedClass === 'all') setSelectedClass(resp.data.classes[0]._id);
     } catch (err) {
       console.error('Load teacher students', err);
       if (err.response?.status === 403) navigate('/');
@@ -27,19 +27,6 @@ const TeacherStudents = () => {
 
   useEffect(() => { load(); }, []);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
-    if (!studentId || !classId) return alert('studentId và classId là bắt buộc');
-    try {
-      await api.post('/users/teacher/students', { studentId, classId });
-      setStudentId('');
-      await load();
-      alert('Thêm học sinh thành công');
-    } catch (err) {
-      console.error('Add student', err);
-      alert(err.response?.data?.error || 'Lỗi khi thêm học sinh');
-    }
-  };
 
   const handleRemove = async (sid, cid) => {
     if (!confirm('Bạn có chắc muốn xóa học sinh khỏi lớp?')) return;
