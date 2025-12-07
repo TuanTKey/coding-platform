@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../services/api';
 import { useAuth } from '../components/admin/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const StatCard = ({ title, value, subtitle, children }) => (
   <div className="bg-white rounded-lg shadow-sm p-4 flex flex-col justify-between">
@@ -18,6 +18,8 @@ const TeacherDashboard = () => {
   const { user } = useAuth();
   const [students, setStudents] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [problemsTotal, setProblemsTotal] = useState(0);
+  const [contestsTotal, setContestsTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +28,17 @@ const TeacherDashboard = () => {
         const resp = await api.get('/users/teacher/me');
         setStudents(resp.data.students || []);
         setClasses(resp.data.classes || []);
+        // Fetch total counts for problems and contests (use the 'total' field returned by list endpoints)
+        try {
+          const [problemsResp, contestsResp] = await Promise.all([
+            api.get('/problems'),
+            api.get('/contests')
+          ]);
+          setProblemsTotal(problemsResp.data?.total || 0);
+          setContestsTotal(contestsResp.data?.total || 0);
+        } catch (err) {
+          console.warn('Could not load problems/contests totals', err);
+        }
       } catch (err) {
         console.error('Load teacher data', err);
       } finally {
@@ -58,16 +71,15 @@ const TeacherDashboard = () => {
             <Link to="/teacher/classes" className="text-xs text-indigo-600 hover:underline">Xem chi tiết &rarr;</Link>
           </StatCard>
 
-          <StatCard title="Học sinh" value={students.length} subtitle={loading ? 'Đang tải...' : 'Tổng số học sinh trong lớp'}>
-            <Link to="/teacher/admin" className="text-xs text-indigo-600 hover:underline">Quản lý bài tập &amp; cuộc thi</Link>
+          <StatCard title="Bài tập" value={problemsTotal} subtitle={loading ? 'Đang tải...' : 'Tổng số bài tập'}>
+            <Link to="/teacher/admin" className="text-xs text-indigo-600 hover:underline">Quản lý bài tập &rarr;</Link>
           </StatCard>
 
-          <StatCard title="Chức năng" value="Quản lý" subtitle="Quyền: quản lý sinh viên, điểm (phạm vi lớp)">
-            <div className="flex space-x-2">
-              <button onClick={() => navigate('/teacher/students')} className="px-3 py-1.5 bg-indigo-600 text-white rounded text-sm">Quản lý Học sinh</button>
-              <button onClick={() => navigate('/teacher/submissions')} className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm">Chấm & Override</button>
-            </div>
+          <StatCard title="Cuộc thi" value={contestsTotal} subtitle={loading ? 'Đang tải...' : 'Tổng số cuộc thi'}>
+            <Link to="/teacher/admin" className="text-xs text-indigo-600 hover:underline">Quản lý cuộc thi &rarr;</Link>
           </StatCard>
+
+          
         </div>
 
         <section className="bg-white rounded-lg shadow p-4">
@@ -75,6 +87,7 @@ const TeacherDashboard = () => {
           <div className="text-sm text-gray-700">
             <p><strong>Lớp được phân công:</strong> {classes.length ? classes.map(c => c.name).join(', ') : 'Không có lớp nào'}</p>
             <p className="mt-2"><strong>Học sinh:</strong> {students.length} người</p>
+            <p className="mt-2"><strong>Bài tập & cuộc thi:</strong> {problemsTotal + contestsTotal} mục</p>
             <p className="mt-2 text-gray-500">Giao diện quản lý chi tiết có thể mở rộng: danh sách bài tập, cuộc thi, và giao diện chấm điểm trong phạm vi lớp.</p>
           </div>
         </section>
