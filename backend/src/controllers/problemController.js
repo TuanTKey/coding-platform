@@ -4,23 +4,27 @@ const TestCase = require('../models/TestCase');
 // Get all problems (public)
 exports.getAllProblems = async (req, res) => {
   try {
-    const { difficulty, tags, search, page = 1, limit = 20 } = req.query;
-    
+    const { difficulty, tags, search, page = 1, limit = 20, createdBy } = req.query;
+
     const query = {};
-    
+
     if (difficulty) {
       query.difficulty = difficulty;
     }
-    
+
     if (tags) {
       query.tags = { $in: tags.split(',') };
     }
-    
+
     if (search) {
       query.$or = [
         { title: { $regex: search, $options: 'i' } },
         { description: { $regex: search, $options: 'i' } }
       ];
+    }
+
+    if (createdBy) {
+      query.createdBy = createdBy;
     }
 
     const problems = await Problem.find(query)

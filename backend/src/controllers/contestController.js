@@ -4,7 +4,7 @@ const Submission = require('../models/Submission');
 // Get all contests
 exports.getAllContests = async (req, res) => {
   try {
-    const { status, page = 1, limit = 20 } = req.query;
+    const { status, page = 1, limit = 20, createdBy } = req.query;
     const query = { isPublic: true };
     const now = new Date();
 
@@ -15,6 +15,10 @@ exports.getAllContests = async (req, res) => {
       query.endTime = { $gte: now };
     } else if (status === 'past') {
       query.endTime = { $lt: now };
+    }
+
+    if (createdBy) {
+      query.createdBy = createdBy;
     }
 
     const contests = await Contest.find(query)

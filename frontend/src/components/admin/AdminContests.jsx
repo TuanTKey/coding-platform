@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { authService } from '../../services/auth';
 import { Plus, Edit, Trash2, Users, Clock, Play, Trophy, Search, Filter, Eye } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
 
@@ -20,7 +21,6 @@ const AdminContests = () => {
       if (filter !== 'all') {
         params.append('status', filter);
       }
-      
       const response = await api.get(`/contests?${params}`);
       setContests(response.data.contests);
     } catch (error) {

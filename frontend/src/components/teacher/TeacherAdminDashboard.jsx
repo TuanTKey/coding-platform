@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { authService } from '../../services/auth';
 import { Users, FileCode, Send, Trophy, TrendingUp, BookOpen, School } from 'lucide-react';
 
 const TeacherAdminDashboard = () => {
@@ -18,24 +19,22 @@ const TeacherAdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      const [usersRes, problemsRes, submissionsRes, contestsRes, classesRes] = await Promise.all([
-        api.get('/users/admin/stats'),
+      // Fetch all problems and contests (no filter)
+      const [problemsRes, contestsRes, submissionsRes, classesRes] = await Promise.all([
         api.get('/problems?limit=1&page=1'),
-        api.get('/submissions/admin/all?limit=10'),
         api.get('/contests?limit=1&page=1'),
+        api.get('/submissions/admin/all?limit=10'),
         api.get('/admin/classes')
       ]);
 
-      setStats({
-        totalUsers: usersRes.data.totalUsers || 0,
-        totalStudents: usersRes.data.totalStudents || 0,
-        totalTeachers: usersRes.data.totalTeachers || 0,
+      setStats(prev => ({
+        ...prev,
         totalProblems: problemsRes.data.total || 0,
-        totalSubmissions: submissionsRes.data.total || 0,
         totalContests: contestsRes.data.total || 0,
+        totalSubmissions: submissionsRes.data.total || 0,
         totalClasses: (classesRes.data.classes || []).length || classesRes.data.total || 0,
         recentSubmissions: submissionsRes.data.submissions || []
-      });
+      }));
     } catch (err) {
       console.error('Load teacher admin stats', err);
       setStats(prev => ({ ...prev, recentSubmissions: [] }));

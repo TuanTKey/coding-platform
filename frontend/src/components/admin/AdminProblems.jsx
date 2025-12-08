@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
+import { authService } from '../../services/auth';
 import { Plus, Edit, Trash2, Search } from 'lucide-react';
 
 const AdminProblems = () => {
