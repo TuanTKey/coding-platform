@@ -1,46 +1,52 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider, useAuth } from './components/admin/AuthContext';
-import Navbar from './components/layout/Navbar';
-import AdminRoute from './components/admin/AdminRoute';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider, useAuth } from "./components/admin/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
+import Navbar from "./components/layout/Navbar";
+import AdminRoute from "./components/admin/AdminRoute";
 
 // Public Pages
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Register from './pages/Register';
-import Leaderboard from './pages/Leaderboard';
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Leaderboard from "./pages/Leaderboard";
 
 // User Pages
-import Problems from './pages/Problems';
-import ProblemSolve from './pages/ProblemSolve';
-import ContestList from './components/contests/ContestList';
-import ContestDetail from './components/contests/ContestDetail';
+import Problems from "./pages/Problems";
+import ProblemSolve from "./pages/ProblemSolve";
+import ContestList from "./components/contests/ContestList";
+import ContestDetail from "./components/contests/ContestDetail";
 
 // Admin Pages
-import AdminDashboard from './components/admin/AdminDashboard';
-import AdminProblems from './components/admin/AdminProblems';
-import CreateProblem from './components/admin/CreateProblem';
-import AdminUsers from './components/admin/AdminUsers';
-import AdminSubmissions from './components/admin/AdminSubmissions';
-import AdminProblemSubmissions from './components/admin/AdminProblemSubmissions';
-import AdminContestSubmissions from './components/admin/AdminContestSubmissions';
-import EditProblem from './components/admin/EditProblem';
-import AdminContests from './components/admin/AdminContests';
-import CreateContest from './components/contests/CreateContest';
-import EditContest from './components/admin/EditContest';
-import ContestLeaderboard from './components/admin/ContestLeaderboard';
+import AdminDashboard from "./components/admin/AdminDashboard";
+import AdminProblems from "./components/admin/AdminProblems";
+import CreateProblem from "./components/admin/CreateProblem";
+import AdminUsers from "./components/admin/AdminUsers";
+import AdminSubmissions from "./components/admin/AdminSubmissions";
+import AdminProblemSubmissions from "./components/admin/AdminProblemSubmissions";
+import AdminContestSubmissions from "./components/admin/AdminContestSubmissions";
+import EditProblem from "./components/admin/EditProblem";
+import AdminContests from "./components/admin/AdminContests";
+import CreateContest from "./components/contests/CreateContest";
+import EditContest from "./components/admin/EditContest";
+import ContestLeaderboard from "./components/admin/ContestLeaderboard";
 
 // Teacher
-import TeacherRoute from './components/teacher/TeacherRoute';
-import TeacherDashboard from './pages/TeacherDashboard';
-import TeacherAdminDashboard from './components/teacher/TeacherAdminDashboard';
-import TeacherStudents from './pages/TeacherStudents';
-import TeacherClasses from './pages/TeacherClasses';
-import Profile from './pages/Profile';
-import EditProfile from './pages/EditProfile';
+import TeacherRoute from "./components/teacher/TeacherRoute";
+import TeacherDashboard from "./pages/TeacherDashboard";
+import TeacherAdminDashboard from "./components/teacher/TeacherAdminDashboard";
+import TeacherStudents from "./pages/TeacherStudents";
+import TeacherClasses from "./pages/TeacherClasses";
+import Profile from "./pages/Profile";
+import EditProfile from "./pages/EditProfile";
 
 // THÊM TRANG QUẢN LÝ LỚP HỌC
-import AdminClasses from './components/admin/AdminClasses';
-import ClassDetail from './components/admin/ClassDetail';
+import AdminClasses from "./components/admin/AdminClasses";
+import ClassDetail from "./components/admin/ClassDetail";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -67,8 +73,8 @@ function AppRoutes() {
       );
     }
     if (!user) return <Home />;
-    if (user.role === 'admin') return <Navigate to="/admin" replace />;
-    if (user.role === 'teacher') return <Navigate to="/teacher" replace />;
+    if (user.role === "admin") return <Navigate to="/admin" replace />;
+    if (user.role === "teacher") return <Navigate to="/teacher" replace />;
     return <Home />;
   };
   return (
@@ -76,52 +82,234 @@ function AppRoutes() {
       <Navbar />
       <div className="app-container">
         <Routes>
-        {/* Public Routes */}
-        <Route path="/" element={<RootRedirect />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/leaderboard" element={<Leaderboard />} />
-        
-        {/* User Routes */}
-        <Route path="/problems" element={<ProtectedRoute><Problems /></ProtectedRoute>} />
-        <Route path="/problems/:slug" element={<ProtectedRoute><ProblemSolve /></ProtectedRoute>} />
-        <Route path="/contests" element={<ProtectedRoute><ContestList /></ProtectedRoute>} />
-        <Route path="/contests/:id" element={<ProtectedRoute><ContestDetail /></ProtectedRoute>} />
-        <Route path="/contests/:id/leaderboard" element={<ProtectedRoute><ContestLeaderboard /></ProtectedRoute>} />  
-        
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin/problems" element={<AdminRoute><AdminProblems /></AdminRoute>} />
-        <Route path="/admin/problems/create" element={<AdminRoute><CreateProblem /></AdminRoute>} />
-        <Route path="/admin/problems/edit/:id" element={<AdminRoute><EditProblem /></AdminRoute>} />
-        
-        <Route path="/admin/submissions" element={<AdminRoute><AdminSubmissions /></AdminRoute>} />
-        <Route path="/admin/submissions/problems" element={<AdminRoute><AdminProblemSubmissions /></AdminRoute>} />
-        <Route path="/admin/submissions/contests" element={<AdminRoute><AdminContestSubmissions /></AdminRoute>} />
-        
-        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
-        
-        <Route path="/admin/contests" element={<AdminRoute><AdminContests /></AdminRoute>} />
-        <Route path="/admin/contests/create" element={<AdminRoute><CreateContest /></AdminRoute>} />
-        <Route path="/admin/contests/edit/:id" element={<AdminRoute><EditContest /></AdminRoute>} />
-        <Route path="/admin/contests/:id/leaderboard" element={<AdminRoute><ContestLeaderboard /></AdminRoute>} />
-        
-        {/* THÊM ROUTES QUẢN LÝ LỚP HỌC */}
-        <Route path="/admin/classes" element={<AdminRoute><AdminClasses /></AdminRoute>} />
-        <Route path="/admin/class/:class" element={<AdminRoute><ClassDetail /></AdminRoute>} />
+          {/* Public Routes */}
+          <Route path="/" element={<RootRedirect />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/leaderboard" element={<Leaderboard />} />
 
-        {/* Teacher Routes */}
-        <Route path="/teacher" element={<TeacherRoute><TeacherDashboard /></TeacherRoute>} />
-        <Route path="/teacher/admin" element={<TeacherRoute><TeacherAdminDashboard /></TeacherRoute>} />
-        <Route path="/teacher/classes" element={<TeacherRoute><TeacherClasses /></TeacherRoute>} />
-        <Route path="/teacher/students" element={<TeacherRoute><TeacherStudents /></TeacherRoute>} />
-        {/* Profile routes */}
-        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
-        <Route path="/users/:id" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-        
-        {/* Fallback Route */}
-        <Route path="*" element={<Navigate to="/" />} />
+          {/* User Routes */}
+          <Route
+            path="/problems"
+            element={
+              <ProtectedRoute>
+                <Problems />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/problems/:slug"
+            element={
+              <ProtectedRoute>
+                <ProblemSolve />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contests"
+            element={
+              <ProtectedRoute>
+                <ContestList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contests/:id"
+            element={
+              <ProtectedRoute>
+                <ContestDetail />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/contests/:id/leaderboard"
+            element={
+              <ProtectedRoute>
+                <ContestLeaderboard />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Routes */}
+          <Route
+            path="/admin"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/problems"
+            element={
+              <AdminRoute>
+                <AdminProblems />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/problems/create"
+            element={
+              <AdminRoute>
+                <CreateProblem />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/problems/edit/:id"
+            element={
+              <AdminRoute>
+                <EditProblem />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/submissions"
+            element={
+              <AdminRoute>
+                <AdminSubmissions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/submissions/problems"
+            element={
+              <AdminRoute>
+                <AdminProblemSubmissions />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/submissions/contests"
+            element={
+              <AdminRoute>
+                <AdminContestSubmissions />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute>
+                <AdminUsers />
+              </AdminRoute>
+            }
+          />
+
+          <Route
+            path="/admin/contests"
+            element={
+              <AdminRoute>
+                <AdminContests />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/contests/create"
+            element={
+              <AdminRoute>
+                <CreateContest />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/contests/edit/:id"
+            element={
+              <AdminRoute>
+                <EditContest />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/contests/:id/leaderboard"
+            element={
+              <AdminRoute>
+                <ContestLeaderboard />
+              </AdminRoute>
+            }
+          />
+
+          {/* THÊM ROUTES QUẢN LÝ LỚP HỌC */}
+          <Route
+            path="/admin/classes"
+            element={
+              <AdminRoute>
+                <AdminClasses />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/class/:class"
+            element={
+              <AdminRoute>
+                <ClassDetail />
+              </AdminRoute>
+            }
+          />
+
+          {/* Teacher Routes */}
+          <Route
+            path="/teacher"
+            element={
+              <TeacherRoute>
+                <TeacherDashboard />
+              </TeacherRoute>
+            }
+          />
+          <Route
+            path="/teacher/admin"
+            element={
+              <TeacherRoute>
+                <TeacherAdminDashboard />
+              </TeacherRoute>
+            }
+          />
+          <Route
+            path="/teacher/classes"
+            element={
+              <TeacherRoute>
+                <TeacherClasses />
+              </TeacherRoute>
+            }
+          />
+          <Route
+            path="/teacher/students"
+            element={
+              <TeacherRoute>
+                <TeacherStudents />
+              </TeacherRoute>
+            }
+          />
+          {/* Profile routes */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/edit"
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/users/:id"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Fallback Route */}
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
     </>
@@ -132,9 +320,11 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
-          <AppRoutes />
-        </div>
+        <ThemeProvider>
+          <div className="App">
+            <AppRoutes />
+          </div>
+        </ThemeProvider>
       </AuthProvider>
     </Router>
   );

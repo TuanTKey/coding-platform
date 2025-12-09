@@ -1,10 +1,12 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../admin/AuthContext';
-import { Code2, Search, Shield, BarChart3 } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../admin/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+import { Code2, Search, Menu, X, Sun, Moon, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -12,144 +14,312 @@ const Navbar = () => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   useEffect(() => {
     const onDoc = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target))
+        setOpen(false);
     };
-    document.addEventListener('click', onDoc);
-    return () => document.removeEventListener('click', onDoc);
+    document.addEventListener("click", onDoc);
+    return () => document.removeEventListener("click", onDoc);
   }, []);
 
   return (
-    <nav className="bg-white shadow sticky top-0 z-50 border-b border-gray-100">
-      <div className="max-w-7xl mx-auto px-2">
-        <div className="flex items-center justify-between h-12">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-3">
-              <div className="p-2 rounded-md bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md">
-                <Code2 size={20} />
+    <nav
+      className={`backdrop-blur-xl sticky top-0 z-50 transition-all duration-300 ${
+        isDark
+          ? "bg-gradient-to-r from-slate-900/95 via-slate-800/95 to-slate-900/95 border-b border-slate-700/50"
+          : "bg-gradient-to-r from-white/95 via-slate-50/95 to-white/95 border-b border-slate-200/50"
+      }`}
+    >
+      <div className="px-6 mx-auto max-w-7xl">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 transition-opacity group hover:opacity-80"
+          >
+            <div
+              className={`p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg hover:shadow-xl group-hover:scale-110 transition-all duration-300 ${
+                isDark
+                  ? "group-hover:shadow-cyan-500/50"
+                  : "group-hover:shadow-cyan-400/50"
+              }`}
+            >
+              <Code2 size={22} strokeWidth={2} />
+            </div>
+            <div>
+              <div
+                className={`text-lg font-bold tracking-tight ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                Code<span className="text-cyan-400">Judge</span>
               </div>
-              <div>
-                <div className="text-base font-semibold text-gray-800">CodeJudge</div>
-                <div className="text-[10px] text-gray-400">Luyện tập & Thi đấu</div>
+              <div
+                className={`text-xs font-medium ${
+                  isDark ? "text-cyan-400/60" : "text-cyan-600/60"
+                }`}
+              >
+                Learn to Code
               </div>
-            </Link>
-          </div>
-          <div className="hidden md:flex items-center flex-1 mx-3">
-            <div className="w-full max-w-lg relative">
-              <div className="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none">
-                <Search className="text-gray-400" size={16} />
+            </div>
+          </Link>
+
+          {/* Search Bar - Hidden on Mobile */}
+          <div className="items-center flex-1 hidden mx-12 lg:flex">
+            <div className="relative w-full max-w-xs group">
+              <div
+                className={`absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none transition-colors ${
+                  isDark ? "text-gray-500" : "text-gray-400"
+                }`}
+              >
+                <Search size={18} strokeWidth={2} />
               </div>
               <input
                 type="search"
-                placeholder="Tìm bài tập, học sinh, lớp..."
-                className="w-full border rounded-md px-2 pl-8 text-sm compact-input focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                placeholder="Tìm bài tập, cuộc thi..."
+                className={`w-full rounded-lg px-4 pl-12 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-400/50 transition-all duration-200 ${
+                  isDark
+                    ? "bg-slate-800/50 border border-slate-700/50 text-white placeholder-gray-500 hover:bg-slate-800/70"
+                    : "bg-slate-100/50 border border-slate-300/50 text-gray-900 placeholder-gray-600 hover:bg-slate-100/70"
+                }`}
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          {/* Navigation Links & Actions */}
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className={`p-2.5 rounded-lg transition-all duration-300 hover:scale-110 btn-hover ${
+                isDark
+                  ? "bg-slate-700/40 hover:bg-slate-700/60 text-yellow-400 border border-slate-600/50"
+                  : "bg-slate-200/40 hover:bg-slate-200/60 text-orange-500 border border-slate-300/50"
+              }`}
+              title={isDark ? "Chế độ sáng" : "Chế độ tối"}
+            >
+              {isDark ? (
+                <Sun size={20} strokeWidth={2} />
+              ) : (
+                <Moon size={20} strokeWidth={2} />
+              )}
+            </button>
+
             {user ? (
               <>
-                <div className="hidden md:flex items-center gap-2">
+                {/* Desktop Navigation */}
+                <div className="items-center hidden gap-2 md:flex">
                   {(() => {
-                    const isAdmin = user?.role === 'admin';
-                    const isTeacher = user?.role === 'teacher';
-                    const isStudent = user?.role === 'user';
+                    const isAdmin = user?.role === "admin";
+                    const isTeacher = user?.role === "teacher";
+                    const isStudent = user?.role === "user";
 
                     if (isStudent) {
                       return (
                         <>
-                          <Link to="/problems" className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm shadow-sm hover:scale-[1.02] transition">Bài tập</Link>
-                          <Link to="/contests" className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">Cuộc thi</Link>
-                          <Link to="/leaderboard" className="inline-flex items-center px-3 py-1.5 rounded-full text-sm text-indigo-600 hover:bg-indigo-50 transition">Xếp hạng</Link>
+                          <Link
+                            to="/problems"
+                            className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
+                              isDark
+                                ? "text-gray-300 hover:text-cyan-400 hover:bg-slate-700/40"
+                                : "text-gray-700 hover:text-cyan-600 hover:bg-slate-200/40"
+                            }`}
+                          >
+                            Bài tập
+                          </Link>
+                          <Link
+                            to="/contests"
+                            className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
+                              isDark
+                                ? "text-gray-300 hover:text-cyan-400 hover:bg-slate-700/40"
+                                : "text-gray-700 hover:text-cyan-600 hover:bg-slate-200/40"
+                            }`}
+                          >
+                            Cuộc thi
+                          </Link>
+                          <Link
+                            to="/leaderboard"
+                            className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
+                              isDark
+                                ? "text-gray-300 hover:text-cyan-400 hover:bg-slate-700/40"
+                                : "text-gray-700 hover:text-cyan-600 hover:bg-slate-200/40"
+                            }`}
+                          >
+                            Xếp hạng
+                          </Link>
                         </>
                       );
                     }
 
                     if (isAdmin || isTeacher) {
                       return (
-                        <>
-                          <Link to={isTeacher ? '/teacher/admin' : '/admin'} className="inline-flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-3 py-1.5 rounded-md shadow">Quản lý</Link>
-                        </>
+                        <Link
+                          to={isAdmin ? "/admin" : "/teacher"}
+                          className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 ${
+                            isDark
+                              ? "text-gray-300 hover:text-cyan-400 hover:bg-slate-700/40"
+                              : "text-gray-700 hover:text-cyan-600 hover:bg-slate-200/40"
+                          }`}
+                        >
+                          {isAdmin ? "Admin" : "Dashboard"}
+                        </Link>
                       );
                     }
-
-                    // Fallback: treat unknown roles as student view
-                    return (
-                      <>
-                        <Link to="/problems" className="inline-flex items-center px-3 py-1.5 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm shadow-sm hover:scale-[1.02] transition">Bài tập</Link>
-                        <Link to="/contests" className="inline-flex items-center px-3 py-1.5 rounded-full border border-gray-200 text-sm text-gray-700 hover:bg-gray-50 transition">Cuộc thi</Link>
-                        <Link to="/leaderboard" className="inline-flex items-center px-3 py-1.5 rounded-full text-sm text-indigo-600 hover:bg-indigo-50 transition">Xếp hạng</Link>
-                      </>
-                    );
                   })()}
                 </div>
 
-                <div className="relative" ref={dropdownRef}>
-                  <button onClick={() => setOpen(v => !v)} className="flex items-center gap-2 bg-white border rounded-lg px-2 py-1 shadow-sm hover:shadow-md">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 flex items-center justify-center text-white font-semibold">{user.username?.[0]?.toUpperCase()}</div>
-                    <div className="hidden sm:flex flex-col text-left">
-                          <span className="text-sm font-medium text-gray-800">{user.fullName || user.username}</span>
-                          <span className="text-[11px] text-gray-500">{user.role}</span>
-                        </div>
+                {/* User Dropdown */}
+                <div className="relative ml-4" ref={dropdownRef}>
+                  <button
+                    onClick={() => setOpen(!open)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 group ${
+                      isDark
+                        ? "hover:bg-slate-700/40 border border-slate-700/50"
+                        : "hover:bg-slate-200/40 border border-slate-300/50"
+                    }`}
+                  >
+                    <div
+                      className={`w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm group-hover:shadow-md transition-shadow ${
+                        isDark
+                          ? "group-hover:shadow-cyan-500/30"
+                          : "group-hover:shadow-cyan-400/30"
+                      }`}
+                    >
+                      {user.username?.[0]?.toUpperCase() || "U"}
+                    </div>
+                    <span
+                      className={`text-sm font-semibold ${
+                        isDark ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      {user.username}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`transition-transform duration-200 ${
+                        open ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
 
-                    {open && (
-                    <div className="absolute right-0 mt-2 w-44 bg-white border rounded-md shadow-lg py-2">
-                      <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Hồ sơ</Link>
-                      <Link to="/profile/edit" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50">Chỉnh sửa</Link>
-                      <div className="border-t my-1"></div>
-                      <button onClick={handleLogout} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50">Đăng xuất</button>
+                  {/* Dropdown Menu */}
+                  {open && (
+                    <div
+                      className={`absolute right-0 mt-2 w-56 rounded-lg shadow-xl z-50 animate-fade-in-down ${
+                        isDark
+                          ? "bg-slate-900/95 border border-slate-700/50"
+                          : "bg-white/95 border border-slate-200/50"
+                      } backdrop-blur`}
+                    >
+                      <div className="p-3 space-y-1">
+                        <Link
+                          to="/profile"
+                          className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isDark
+                              ? "text-gray-300 hover:bg-slate-700/40 hover:text-cyan-400"
+                              : "text-gray-700 hover:bg-slate-100/50 hover:text-cyan-600"
+                          }`}
+                        >
+                          Hồ sơ cá nhân
+                        </Link>
+                        <button
+                          onClick={() => {
+                            handleLogout();
+                            setOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isDark
+                              ? "text-red-400 hover:bg-red-500/20"
+                              : "text-red-600 hover:bg-red-100/50"
+                          }`}
+                        >
+                          Đăng xuất
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
               </>
             ) : (
-              <div className="hidden md:flex items-center gap-3">
-                <Link to="/login" className="text-sm font-medium text-gray-700 hover:text-indigo-600">Đăng nhập</Link>
-                <Link to="/register" className="text-sm font-semibold bg-indigo-600 text-white px-3 py-1.5 rounded">Đăng ký</Link>
-              </div>
+              <>
+                <Link
+                  to="/login"
+                  className={`text-sm font-semibold px-4 py-2 rounded-lg transition-all duration-200 hidden sm:block ${
+                    isDark
+                      ? "text-gray-300 hover:text-cyan-400 hover:bg-slate-700/40"
+                      : "text-gray-700 hover:text-cyan-600 hover:bg-slate-200/40"
+                  }`}
+                >
+                  Đăng nhập
+                </Link>
+                <Link
+                  to="/register"
+                  className="px-4 py-2 text-sm font-semibold text-white transition-all duration-200 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:shadow-lg hover:shadow-cyan-500/30 hover:scale-105"
+                >
+                  Đăng ký
+                </Link>
+              </>
             )}
 
-            <button onClick={() => setMobileOpen(v => !v)} className="md:hidden text-gray-600">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={`md:hidden p-2.5 rounded-lg transition-all duration-200 ${
+                isDark
+                  ? "hover:bg-slate-700/40 text-gray-300"
+                  : "hover:bg-slate-200/40 text-gray-700"
+              }`}
+            >
+              {mobileOpen ? <X size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
-        {mobileOpen && (
-          <div className="md:hidden border-t border-gray-100 py-2">
-            <div className="px-4 flex flex-col gap-2">
-                  {user ? (
-                <>
-                  {/* show student links for students and fallback users */}
-                  {(user.role === 'user' || !user.role) && (
-                    <>
-                      <Link to="/problems" className="py-2">Bài tập</Link>
-                      <Link to="/contests" className="py-2">Cuộc thi</Link>
-                      <Link to="/leaderboard" className="py-2">Xếp hạng</Link>
-                    </>
-                  )}
-
-                  {(user.role === 'admin' || user.role === 'teacher') && (
-                    <>
-                      <Link to="/admin" className="py-2">Quản lý</Link>
-                    </>
-                  )}
-                  <Link to="/profile" className="py-2">Hồ sơ</Link>
-                  <button onClick={handleLogout} className="py-2 text-red-600 text-left">Đăng xuất</button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="py-2">Đăng nhập</Link>
-                  <Link to="/register" className="py-2">Đăng ký</Link>
-                </>
-              )}
-            </div>
+        {/* Mobile Menu */}
+        {mobileOpen && user && (
+          <div
+            className={`md:hidden pb-4 space-y-2 border-t transition-all duration-200 ${
+              isDark ? "border-slate-700/50" : "border-slate-200/50"
+            }`}
+          >
+            {user?.role === "user" && (
+              <>
+                <Link
+                  to="/problems"
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isDark
+                      ? "text-gray-300 hover:bg-slate-700/40 hover:text-cyan-400"
+                      : "text-gray-700 hover:bg-slate-200/40 hover:text-cyan-600"
+                  }`}
+                >
+                  Bài tập
+                </Link>
+                <Link
+                  to="/contests"
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isDark
+                      ? "text-gray-300 hover:bg-slate-700/40 hover:text-cyan-400"
+                      : "text-gray-700 hover:bg-slate-200/40 hover:text-cyan-600"
+                  }`}
+                >
+                  Cuộc thi
+                </Link>
+                <Link
+                  to="/leaderboard"
+                  className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isDark
+                      ? "text-gray-300 hover:bg-slate-700/40 hover:text-cyan-400"
+                      : "text-gray-700 hover:bg-slate-200/40 hover:text-cyan-600"
+                  }`}
+                >
+                  Xếp hạng
+                </Link>
+              </>
+            )}
           </div>
         )}
       </div>
