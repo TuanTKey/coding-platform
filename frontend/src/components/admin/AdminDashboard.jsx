@@ -1,16 +1,28 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import api from '../../services/api';
-import { Users, FileCode, Send, Trophy, TrendingUp, BookOpen, School } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import api from "../../services/api";
+import { useTheme } from "../../contexts/ThemeContext";
+import {
+  Users,
+  FileCode,
+  Send,
+  Trophy,
+  TrendingUp,
+  BookOpen,
+  School,
+  BarChart3,
+  Activity,
+} from "lucide-react";
 
 const AdminDashboard = () => {
+  const { isDark } = useTheme();
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalProblems: 0,
     totalSubmissions: 0,
     totalContests: 0,
     totalClasses: 0,
-    recentSubmissions: []
+    recentSubmissions: [],
   });
   const [loading, setLoading] = useState(true);
 
@@ -20,19 +32,23 @@ const AdminDashboard = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('🔄 Fetching admin stats...');
-      
-      // Fetch từ các endpoints
-      const [usersRes, problemsRes, submissionsRes, contestsRes, classesRes] = await Promise.all([
-        api.get('/users/admin/stats'),
-        api.get('/problems?limit=1&page=1'),
-        api.get('/submissions/admin/all?limit=10'),
-        api.get('/contests?limit=1&page=1'),
-        // Use canonical Class documents endpoint so counts match Admin Classes view
-        api.get('/admin/classes')
-      ]);
+      console.log("🔄 Fetching admin stats...");
 
-      console.log('📊 API Responses:', { users: usersRes.data, classes: classesRes.data });
+      // Fetch từ các endpoints
+      const [usersRes, problemsRes, submissionsRes, contestsRes, classesRes] =
+        await Promise.all([
+          api.get("/users/admin/stats"),
+          api.get("/problems?limit=1&page=1"),
+          api.get("/submissions/admin/all?limit=10"),
+          api.get("/contests?limit=1&page=1"),
+          // Use canonical Class documents endpoint so counts match Admin Classes view
+          api.get("/admin/classes"),
+        ]);
+
+      console.log("📊 API Responses:", {
+        users: usersRes.data,
+        classes: classesRes.data,
+      });
 
       setStats({
         totalUsers: usersRes.data.totalUsers || 0,
@@ -42,20 +58,20 @@ const AdminDashboard = () => {
         totalSubmissions: submissionsRes.data.total || 0,
         totalContests: contestsRes.data.total || 0,
         // admin/classes returns `classes` array (server-side). Use its length as canonical total.
-        totalClasses: (classesRes.data.classes || []).length || classesRes.data.total || 0,
-        recentSubmissions: submissionsRes.data.submissions || []
+        totalClasses:
+          (classesRes.data.classes || []).length || classesRes.data.total || 0,
+        recentSubmissions: submissionsRes.data.submissions || [],
       });
-
     } catch (error) {
-      console.error('❌ Error fetching stats:', error);
+      console.error("❌ Error fetching stats:", error);
       // Fallback data
-      setStats(prev => ({
+      setStats((prev) => ({
         ...prev,
         totalUsers: 0,
         totalStudents: 0,
         totalTeachers: 0,
         totalClasses: 0,
-        recentSubmissions: []
+        recentSubmissions: [],
       }));
     } finally {
       setLoading(false);
@@ -64,42 +80,42 @@ const AdminDashboard = () => {
 
   const statCards = [
     {
-      title: 'Tổng Users',
+      title: "Tổng Users",
       value: stats.totalUsers,
       icon: Users,
-      color: 'from-blue-500 to-blue-600',
-      link: '/admin/users?role=admin',
-      description: `${stats.totalStudents} học sinh, ${stats.totalTeachers} giáo viên`
+      color: "from-blue-500 to-blue-600",
+      link: "/admin/users?role=admin",
+      description: `${stats.totalStudents} học sinh, ${stats.totalTeachers} giáo viên`,
     },
     {
-      title: 'Tổng Problems',
+      title: "Tổng Problems",
       value: stats.totalProblems,
       icon: FileCode,
-      color: 'from-green-500 to-green-600',
-      link: '/admin/problems'
+      color: "from-green-500 to-green-600",
+      link: "/admin/problems",
     },
     {
-      title: 'Tổng Submissions',
+      title: "Tổng Submissions",
       value: stats.totalSubmissions,
       icon: Send,
-      color: 'from-purple-500 to-purple-600',
-      link: '/admin/submissions'
+      color: "from-purple-500 to-purple-600",
+      link: "/admin/submissions",
     },
     {
-      title: 'Tổng Contests',
+      title: "Tổng Contests",
       value: stats.totalContests,
       icon: Trophy,
-      color: 'from-orange-500 to-orange-600',
-      link: '/admin/contests'
+      color: "from-orange-500 to-orange-600",
+      link: "/admin/contests",
     },
     {
-      title: 'Lớp học',
+      title: "Lớp học",
       value: stats.totalClasses,
       icon: School,
-      color: 'from-red-500 to-red-600',
-      link: '/admin/classes',
-      description: 'Tổng số lớp'
-    }
+      color: "from-red-500 to-red-600",
+      link: "/admin/classes",
+      description: "Tổng số lớp",
+    },
   ];
 
   if (loading) {
@@ -115,7 +131,9 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
+            Admin Dashboard
+          </h1>
           <p className="text-gray-600">Quản lý hệ thống học tập</p>
           <div className="mt-2 text-sm text-gray-500">
             Hệ thống quản lý lớp học và bài tập lập trình
@@ -133,17 +151,25 @@ const AdminDashboard = () => {
                 className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all p-6 border border-gray-200"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}>
+                  <div
+                    className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-lg flex items-center justify-center`}
+                  >
                     <Icon className="text-white" size={24} />
                   </div>
                   <TrendingUp className="text-green-500" size={20} />
                 </div>
-                <h3 className="text-gray-600 text-sm font-medium mb-1">{stat.title}</h3>
+                <h3 className="text-gray-600 text-sm font-medium mb-1">
+                  {stat.title}
+                </h3>
                 <p className="text-3xl font-bold text-gray-800">{stat.value}</p>
                 {stat.description && (
-                  <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stat.description}
+                  </p>
                 )}
-                <p className="text-xs text-gray-500 mt-1">Click để xem chi tiết</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Click để xem chi tiết
+                </p>
               </Link>
             );
           })}
@@ -152,7 +178,9 @@ const AdminDashboard = () => {
         {/* Quick Actions & Recent Submissions */}
         <div className="grid md:grid-cols-2 gap-6">
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Quick Actions
+            </h2>
             <div className="space-y-3">
               <Link
                 to="/admin/problems/create"
@@ -196,37 +224,52 @@ const AdminDashboard = () => {
           {/* Recent Submissions */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Bài nộp gần đây</h2>
-              <span className="text-sm text-gray-500">{stats.recentSubmissions.length} bài</span>
+              <h2 className="text-xl font-bold text-gray-800">
+                Bài nộp gần đây
+              </h2>
+              <span className="text-sm text-gray-500">
+                {stats.recentSubmissions.length} bài
+              </span>
             </div>
             <div className="space-y-3 max-h-64 overflow-y-auto">
               {stats.recentSubmissions.length > 0 ? (
                 stats.recentSubmissions.map((submission, index) => (
-                  <div key={submission._id || index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div
+                    key={submission._id || index}
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <p className="font-semibold text-gray-800">
-                          {submission.userId?.username || 'Unknown'}
+                          {submission.userId?.username || "Unknown"}
                         </p>
                         <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                          {submission.userId?.class || 'N/A'}
+                          {submission.userId?.class || "N/A"}
                         </span>
                       </div>
                       <p className="text-sm text-gray-600">
-                        {submission.problemId?.title || 'Unknown Problem'}
+                        {submission.problemId?.title || "Unknown Problem"}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(submission.createdAt).toLocaleDateString('vi-VN')}
+                        {new Date(submission.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
                       </p>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      submission.status === 'accepted' ? 'bg-green-100 text-green-800' :
-                      submission.status === 'wrong_answer' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {submission.status === 'accepted' ? 'ĐẠT' :
-                       submission.status === 'wrong_answer' ? 'SAI' :
-                       submission.status}
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        submission.status === "accepted"
+                          ? "bg-green-100 text-green-800"
+                          : submission.status === "wrong_answer"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-yellow-100 text-yellow-800"
+                      }`}
+                    >
+                      {submission.status === "accepted"
+                        ? "ĐẠT"
+                        : submission.status === "wrong_answer"
+                        ? "SAI"
+                        : submission.status}
                     </span>
                   </div>
                 ))

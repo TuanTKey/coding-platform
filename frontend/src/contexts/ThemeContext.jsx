@@ -12,6 +12,17 @@ export const ThemeProvider = ({ children }) => {
     }
   }, []);
 
+  useEffect(() => {
+    // Apply class to body element when theme changes
+    if (isDark) {
+      document.body.classList.add("dark-mode");
+      document.documentElement.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark-mode");
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
+
   const toggleTheme = () => {
     setIsDark((prev) => {
       const newValue = !prev;
