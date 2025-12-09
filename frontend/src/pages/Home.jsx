@@ -13,6 +13,8 @@ import {
   Brain,
   Flame,
   Clock,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import api from "../services/api";
 import DateTimeWidget from "../components/common/DateTimeWidget";
@@ -28,12 +30,20 @@ const Home = () => {
   });
   const [recentProblems, setRecentProblems] = useState([]);
   const [topUsers, setTopUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchContests();
-    fetchStats();
-    fetchRecentProblems();
-    fetchTopUsers();
+    const loadData = async () => {
+      setLoading(true);
+      await Promise.all([
+        fetchContests(),
+        fetchStats(),
+        fetchRecentProblems(),
+        fetchTopUsers(),
+      ]);
+      setLoading(false);
+    };
+    loadData();
   }, []);
 
   const fetchContests = async () => {
@@ -135,32 +145,62 @@ const Home = () => {
             : "bg-gradient-to-br from-white via-cyan-50 to-blue-50"
         }`}
       >
-        {/* Animated Gradient Blobs - Light Mode Only */}
+        {/* Animated Grid Background - Dark Mode */}
+        {isDark && (
+          <div className="absolute inset-0 overflow-hidden">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                linear-gradient(0deg, transparent 24%, rgba(79, 172, 254, 0.05) 25%, rgba(79, 172, 254, 0.05) 26%, transparent 27%, transparent 74%, rgba(79, 172, 254, 0.05) 75%, rgba(79, 172, 254, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(79, 172, 254, 0.05) 25%, rgba(79, 172, 254, 0.05) 26%, transparent 27%, transparent 74%, rgba(79, 172, 254, 0.05) 75%, rgba(79, 172, 254, 0.05) 76%, transparent 77%, transparent)
+              `,
+                backgroundSize: "50px 50px",
+              }}
+            ></div>
+          </div>
+        )}
+        {/* Animated Gradient Blobs - Light Mode */}
         {!isDark && (
           <>
-            <div className="absolute top-0 rounded-full -left-40 w-80 h-80 bg-gradient-to-br from-cyan-300 to-blue-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-0 rounded-full -left-40 w-80 h-80 bg-gradient-to-br from-cyan-300 to-blue-300 mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
             <div
-              className="absolute rounded-full -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-300 to-pink-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
+              className="absolute rounded-full -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-300 to-pink-300 mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
               style={{ animationDelay: "2s" }}
             ></div>
             <div
-              className="absolute bottom-0 rounded-full left-1/3 w-80 h-80 bg-gradient-to-br from-blue-300 to-cyan-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
+              className="absolute bottom-0 rounded-full left-1/3 w-80 h-80 bg-gradient-to-br from-blue-300 to-cyan-300 mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
               style={{ animationDelay: "4s" }}
             ></div>
           </>
         )}
 
-        {/* Dark Mode Background Pattern */}
+        {/* Dark Mode Floating Elements */}
         {isDark && (
-          <>
-            <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute rounded-full top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-900/20 to-blue-900/20 blur-3xl"></div>
-              <div className="absolute rounded-full bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-900/20 to-pink-900/20 blur-3xl"></div>
-            </div>
-          </>
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="absolute rounded-full top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-900/10 to-blue-900/10 blur-3xl animate-pulse"></div>
+            <div
+              className="absolute rounded-full bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-900/10 to-pink-900/10 blur-3xl animate-pulse"
+              style={{ animationDelay: "2s" }}
+            ></div>
+          </div>
         )}
 
         <div className="relative z-10 max-w-5xl py-20 mx-auto text-center sm:py-24">
+          {/* Badge */}
+          <div className="inline-flex mb-6">
+            <div
+              className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${
+                isDark
+                  ? "bg-cyan-500/20 text-cyan-300 border border-cyan-400/50"
+                  : "bg-cyan-100 text-cyan-700 border border-cyan-300/50"
+              }`}
+            >
+              <Zap size={14} />
+              Cộng đồng 10,000+ lập trình viên
+            </div>
+          </div>
+
           {/* Main Title */}
           <h1
             className={`text-6xl sm:text-7xl lg:text-8xl font-black mb-6 leading-tight ${
@@ -201,7 +241,7 @@ const Home = () => {
               <>
                 <Link
                   to="/register"
-                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transform hover:scale-105 ${
                     isDark
                       ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-500 hover:to-blue-500"
                       : "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
@@ -212,7 +252,7 @@ const Home = () => {
                 </Link>
                 <Link
                   to="/login"
-                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 border-2 ${
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 border-2 backdrop-blur-sm ${
                     isDark
                       ? "border-cyan-500 text-cyan-400 hover:bg-cyan-500/10"
                       : "border-cyan-500 text-cyan-600 hover:bg-cyan-100"
@@ -226,7 +266,7 @@ const Home = () => {
               <>
                 <Link
                   to="/problems"
-                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transform hover:scale-105 ${
                     isDark
                       ? "bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:from-cyan-500 hover:to-blue-500"
                       : "bg-gradient-to-r from-cyan-500 to-blue-500 text-white hover:from-cyan-600 hover:to-blue-600"
@@ -237,7 +277,7 @@ const Home = () => {
                 </Link>
                 <Link
                   to="/contests"
-                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 border-2 ${
+                  className={`px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-2 border-2 backdrop-blur-sm ${
                     isDark
                       ? "border-purple-500 text-purple-400 hover:bg-purple-500/10"
                       : "border-purple-500 text-purple-600 hover:bg-purple-100"
@@ -263,21 +303,21 @@ const Home = () => {
                 label: "Cuộc Thi",
                 value: stats.totalContests || "20+",
               },
-              { icon: Users, label: "Cộng Đồng", value: "1000+" },
+              { icon: Users, label: "Cộng Đồng", value: "10K+" },
               { icon: Code, label: "Ngôn Ngữ", value: "4+" },
             ].map((stat, idx) => {
               const Icon = stat.icon;
               return (
                 <div
                   key={idx}
-                  className={`p-4 rounded-2xl transition-all duration-300 ${
+                  className={`p-4 rounded-2xl transition-all duration-300 backdrop-blur-sm group hover:scale-105 ${
                     isDark
                       ? "bg-slate-800/50 border border-slate-700/50 hover:bg-slate-700/50 hover:border-cyan-500/50"
                       : "bg-white/70 border border-cyan-200/50 hover:bg-white hover:border-cyan-400/50"
                   }`}
                 >
                   <Icon
-                    className={`mx-auto mb-2 ${
+                    className={`mx-auto mb-2 transition-all group-hover:scale-110 ${
                       isDark ? "text-cyan-400" : "text-cyan-600"
                     }`}
                     size={24}
@@ -328,7 +368,7 @@ const Home = () => {
       {/* ============ FEATURES SECTION ============ */}
       <section
         className={`py-24 px-4 sm:px-6 lg:px-8 ${
-          isDark ? "bg-slate-800/30" : "bg-white/50"
+          isDark ? "bg-slate-800/50" : "bg-white/50"
         }`}
       >
         <div className="mx-auto max-w-7xl">
@@ -367,7 +407,7 @@ const Home = () => {
                 desc: "Tham gia các cuộc thi hàng tuần, leo bảng xếp hạng và giành giải thưởng",
               },
               {
-                icon: BarChart3,
+                icon: TrendingUp,
                 title: "Thống Kê Chi Tiết",
                 desc: "Theo dõi tiến độ học tập với các biểu đồ và thống kê toàn diện",
               },
@@ -386,14 +426,14 @@ const Home = () => {
               return (
                 <div
                   key={idx}
-                  className={`p-8 rounded-2xl transition-all duration-300 group hover:shadow-xl ${
+                  className={`p-8 rounded-2xl transition-all duration-300 group hover:shadow-xl hover:scale-105 ${
                     isDark
                       ? "bg-gradient-to-br from-slate-800 to-slate-700/50 border border-slate-700/50 hover:border-cyan-500/30"
                       : "bg-gradient-to-br from-white to-slate-50 border border-slate-200/50 hover:border-cyan-300/50"
                   }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-all ${
+                    className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 transition-all group-hover:scale-125 ${
                       isDark
                         ? "bg-cyan-500/20 group-hover:bg-cyan-500/40"
                         : "bg-cyan-100/50 group-hover:bg-cyan-200/50"
@@ -407,7 +447,7 @@ const Home = () => {
                     />
                   </div>
                   <h3
-                    className={`text-xl font-bold mb-2 ${
+                    className={`text-xl font-bold mb-2 group-hover:text-cyan-400 transition-colors ${
                       isDark ? "text-white" : "text-gray-900"
                     }`}
                   >
@@ -480,7 +520,7 @@ const Home = () => {
                     <Link
                       key={problem._id}
                       to={`/problems/${problem.slug}`}
-                      className={`block p-4 rounded-lg transition-all duration-300 ${
+                      className={`block p-4 rounded-lg transition-all duration-300 group hover:scale-105 ${
                         isDark
                           ? "bg-slate-700/50 hover:bg-slate-700/80 hover:border-cyan-400/50 border border-slate-600/50"
                           : "bg-cyan-50/50 hover:bg-white hover:border-cyan-400/50 border border-cyan-200/50"
@@ -489,7 +529,7 @@ const Home = () => {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <h4
-                            className={`font-bold truncate mb-1 ${
+                            className={`font-bold truncate mb-1 group-hover:text-cyan-500 transition-colors ${
                               isDark
                                 ? "text-cyan-300 hover:text-cyan-200"
                                 : "text-cyan-700 hover:text-cyan-800"
@@ -516,13 +556,13 @@ const Home = () => {
                     </Link>
                   ))
                 ) : (
-                  <p
+                  <div
                     className={`text-center py-8 ${
                       isDark ? "text-gray-500" : "text-gray-600"
                     }`}
                   >
-                    Đang tải bài tập...
-                  </p>
+                    <div className="animate-pulse">Đang tải bài tập...</div>
+                  </div>
                 )}
               </div>
 
@@ -535,7 +575,7 @@ const Home = () => {
               >
                 <Link
                   to="/problems"
-                  className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-bold transition-all duration-300 ${
+                  className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 ${
                     isDark
                       ? "bg-cyan-600 hover:bg-cyan-500 text-white"
                       : "bg-cyan-500 hover:bg-cyan-600 text-white"
@@ -596,7 +636,7 @@ const Home = () => {
                     <Link
                       key={user._id}
                       to={`/users/${user._id}`}
-                      className={`flex items-center gap-4 p-4 rounded-lg transition-all duration-300 ${
+                      className={`flex items-center gap-4 p-4 rounded-lg transition-all duration-300 group hover:scale-105 ${
                         isDark
                           ? "bg-slate-700/50 hover:bg-slate-700/80 hover:border-purple-400/50 border border-slate-600/50"
                           : "bg-purple-50/50 hover:bg-white hover:border-purple-400/50 border border-purple-200/50"
@@ -634,7 +674,7 @@ const Home = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`font-bold truncate ${
+                          className={`font-bold truncate group-hover:text-purple-500 transition-colors ${
                             isDark ? "text-purple-300" : "text-purple-700"
                           }`}
                         >
@@ -667,13 +707,13 @@ const Home = () => {
                     </Link>
                   ))
                 ) : (
-                  <p
+                  <div
                     className={`text-center py-8 ${
                       isDark ? "text-gray-500" : "text-gray-600"
                     }`}
                   >
-                    Đang tải xếp hạng...
-                  </p>
+                    <div className="animate-pulse">Đang tải xếp hạng...</div>
+                  </div>
                 )}
               </div>
 
@@ -686,7 +726,7 @@ const Home = () => {
               >
                 <Link
                   to="/leaderboard"
-                  className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-bold transition-all duration-300 ${
+                  className={`flex items-center justify-center gap-2 w-full py-3 px-4 rounded-lg font-bold transition-all duration-300 hover:scale-105 ${
                     isDark
                       ? "bg-purple-600 hover:bg-purple-500 text-white"
                       : "bg-purple-500 hover:bg-purple-600 text-white"
@@ -705,7 +745,7 @@ const Home = () => {
       {contests.length > 0 && (
         <section
           className={`py-24 px-4 sm:px-6 lg:px-8 ${
-            isDark ? "bg-slate-800/30" : "bg-white/50"
+            isDark ? "bg-slate-800/50" : "bg-white/50"
           }`}
         >
           <div className="mx-auto max-w-7xl">
@@ -745,7 +785,7 @@ const Home = () => {
                   <Link
                     key={contest._id}
                     to={`/contests/${contest._id}`}
-                    className={`group rounded-2xl overflow-hidden transition-all duration-300 shadow-lg hover:shadow-2xl ${
+                    className={`group rounded-2xl overflow-hidden transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105 ${
                       isDark
                         ? "bg-gradient-to-br from-slate-800 to-slate-700/50 hover:border-orange-500/50"
                         : "bg-gradient-to-br from-white to-slate-50 hover:border-orange-300/50"
@@ -814,7 +854,7 @@ const Home = () => {
             <div className="mt-12 text-center">
               <Link
                 to="/contests"
-                className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 ${
+                className={`inline-flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 ${
                   isDark
                     ? "bg-orange-600 hover:bg-orange-500 text-white"
                     : "bg-orange-500 hover:bg-orange-600 text-white"
@@ -950,7 +990,7 @@ const Home = () => {
             }`}
           >
             <p className={isDark ? "text-gray-500" : "text-gray-600"}>
-              ©Nguyễn Anh Tuấn và Y Phai Niê 2025. All rights reserved.
+              ©Nguyễn Anh Tuấn và Y Phai Niê - 2025. All rights reserved.
             </p>
           </div>
         </div>
