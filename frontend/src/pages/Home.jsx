@@ -15,6 +15,8 @@ import {
   Clock,
 } from "lucide-react";
 import api from "../services/api";
+import DateTimeWidget from "../components/common/DateTimeWidget";
+import MessengerContact from "../components/common/MessengerContact";
 
 const Home = () => {
   const { user } = useAuth();
@@ -136,13 +138,13 @@ const Home = () => {
         {/* Animated Gradient Blobs - Light Mode Only */}
         {!isDark && (
           <>
-            <div className="absolute top-0 -left-40 w-80 h-80 bg-gradient-to-br from-cyan-300 to-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+            <div className="absolute top-0 rounded-full -left-40 w-80 h-80 bg-gradient-to-br from-cyan-300 to-blue-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
             <div
-              className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-300 to-pink-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
+              className="absolute rounded-full -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-purple-300 to-pink-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
               style={{ animationDelay: "2s" }}
             ></div>
             <div
-              className="absolute bottom-0 left-1/3 w-80 h-80 bg-gradient-to-br from-blue-300 to-cyan-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
+              className="absolute bottom-0 rounded-full left-1/3 w-80 h-80 bg-gradient-to-br from-blue-300 to-cyan-300 mix-blend-multiply filter blur-3xl opacity-30 animate-blob"
               style={{ animationDelay: "4s" }}
             ></div>
           </>
@@ -152,13 +154,13 @@ const Home = () => {
         {isDark && (
           <>
             <div className="absolute inset-0 overflow-hidden">
-              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-900/20 to-blue-900/20 rounded-full blur-3xl"></div>
-              <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-900/20 to-pink-900/20 rounded-full blur-3xl"></div>
+              <div className="absolute rounded-full top-1/4 left-1/4 w-96 h-96 bg-gradient-to-br from-cyan-900/20 to-blue-900/20 blur-3xl"></div>
+              <div className="absolute rounded-full bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-900/20 to-pink-900/20 blur-3xl"></div>
             </div>
           </>
         )}
 
-        <div className="relative z-10 max-w-5xl mx-auto text-center py-20 sm:py-24">
+        <div className="relative z-10 max-w-5xl py-20 mx-auto text-center sm:py-24">
           {/* Main Title */}
           <h1
             className={`text-6xl sm:text-7xl lg:text-8xl font-black mb-6 leading-tight ${
@@ -181,8 +183,8 @@ const Home = () => {
               isDark ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Giải bài tập, tham gia cuộc thi, và trở thành lập trình viên xuất sắc
-            cùng{" "}
+            Giải bài tập, tham gia cuộc thi, và trở thành lập trình viên xuất
+            sắc cùng{" "}
             <span
               className={
                 isDark ? "text-cyan-400 font-bold" : "text-cyan-600 font-bold"
@@ -194,7 +196,7 @@ const Home = () => {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+          <div className="flex flex-col justify-center gap-4 mb-16 sm:flex-row">
             {!user ? (
               <>
                 <Link
@@ -249,10 +251,18 @@ const Home = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto">
+          <div className="grid max-w-3xl grid-cols-2 gap-4 mx-auto md:grid-cols-4">
             {[
-              { icon: BookOpen, label: "Bài Tập", value: stats.totalProblems || "500+" },
-              { icon: Trophy, label: "Cuộc Thi", value: stats.totalContests || "20+" },
+              {
+                icon: BookOpen,
+                label: "Bài Tập",
+                value: stats.totalProblems || "500+",
+              },
+              {
+                icon: Trophy,
+                label: "Cuộc Thi",
+                value: stats.totalContests || "20+",
+              },
               { icon: Users, label: "Cộng Đồng", value: "1000+" },
               { icon: Code, label: "Ngôn Ngữ", value: "4+" },
             ].map((stat, idx) => {
@@ -293,10 +303,24 @@ const Home = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
-          <span className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-600"}`}>Cuộn xuống</span>
-          <div className={`w-6 h-10 border-2 rounded-full flex items-start justify-center p-2 ${isDark ? "border-gray-400" : "border-gray-600"}`}>
-            <div className={`w-1 h-2 rounded-full ${isDark ? "bg-gray-400" : "bg-gray-600"} animate-bounce`}></div>
+        <div className="absolute flex flex-col items-center gap-2 transform -translate-x-1/2 bottom-8 left-1/2 animate-bounce">
+          <span
+            className={`text-sm font-semibold ${
+              isDark ? "text-gray-400" : "text-gray-600"
+            }`}
+          >
+            Cuộn xuống
+          </span>
+          <div
+            className={`w-6 h-10 border-2 rounded-full flex items-start justify-center p-2 ${
+              isDark ? "border-gray-400" : "border-gray-600"
+            }`}
+          >
+            <div
+              className={`w-1 h-2 rounded-full ${
+                isDark ? "bg-gray-400" : "bg-gray-600"
+              } animate-bounce`}
+            ></div>
           </div>
         </div>
       </section>
@@ -307,8 +331,8 @@ const Home = () => {
           isDark ? "bg-slate-800/30" : "bg-white/50"
         }`}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
             <h2
               className={`text-4xl font-bold mb-4 ${
                 isDark ? "text-white" : "text-gray-900"
@@ -325,7 +349,7 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid gap-8 md:grid-cols-3">
             {[
               {
                 icon: Code,
@@ -405,8 +429,8 @@ const Home = () => {
           isDark ? "bg-slate-900" : "bg-slate-50"
         }`}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-2">
             {/* ===== Recent Problems ===== */}
             <div
               className={`rounded-2xl overflow-hidden shadow-xl transition-all duration-300 ${
@@ -450,7 +474,7 @@ const Home = () => {
                 </p>
               </div>
 
-              <div className="p-8 space-y-3 max-h-96 overflow-y-auto">
+              <div className="p-8 space-y-3 overflow-y-auto max-h-96">
                 {recentProblems.length > 0 ? (
                   recentProblems.map((problem) => (
                     <Link
@@ -566,7 +590,7 @@ const Home = () => {
                 </p>
               </div>
 
-              <div className="p-8 space-y-3 max-h-96 overflow-y-auto">
+              <div className="p-8 space-y-3 overflow-y-auto max-h-96">
                 {topUsers.length > 0 ? (
                   topUsers.map((user, idx) => (
                     <Link
@@ -624,7 +648,7 @@ const Home = () => {
                           {user.fullName || "Lập trình viên"}
                         </p>
                       </div>
-                      <div className="text-right flex-shrink-0">
+                      <div className="flex-shrink-0 text-right">
                         <div
                           className={`text-lg font-black ${
                             isDark ? "text-purple-400" : "text-purple-600"
@@ -684,7 +708,7 @@ const Home = () => {
             isDark ? "bg-slate-800/30" : "bg-white/50"
           }`}
         >
-          <div className="max-w-7xl mx-auto">
+          <div className="mx-auto max-w-7xl">
             <div className="mb-16">
               <div className="flex items-center gap-3 mb-2">
                 <div
@@ -714,7 +738,7 @@ const Home = () => {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid gap-6 md:grid-cols-3">
               {contests.map((contest) => {
                 const status = getContestStatus(contest);
                 return (
@@ -768,7 +792,9 @@ const Home = () => {
                           }`}
                         >
                           <Clock size={16} />
-                          {new Date(contest.startTime).toLocaleDateString("vi-VN")}
+                          {new Date(contest.startTime).toLocaleDateString(
+                            "vi-VN"
+                          )}
                         </span>
                         <span
                           className={`flex items-center gap-1.5 ${
@@ -827,7 +853,7 @@ const Home = () => {
             tráng lệ ngay hôm nay!
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col justify-center gap-4 sm:flex-row">
             {!user ? (
               <>
                 <Link
@@ -865,8 +891,8 @@ const Home = () => {
           isDark ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
         } py-12 px-4 sm:px-6 lg:px-8`}
       >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 mb-8 md:grid-cols-4">
             <div>
               <h3
                 className={`text-lg font-bold mb-4 ${
@@ -924,11 +950,17 @@ const Home = () => {
             }`}
           >
             <p className={isDark ? "text-gray-500" : "text-gray-600"}>
-              © 2024 CodeJudge. All rights reserved.
+              ©Nguyễn Anh Tuấn và Y Phai Niê 2025. All rights reserved.
             </p>
           </div>
         </div>
       </footer>
+
+      {/* Date Time Widget */}
+      <DateTimeWidget />
+
+      {/* Messenger Contact */}
+      <MessengerContact />
     </div>
   );
 };
