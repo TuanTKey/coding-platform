@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./components/admin/AuthContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Navbar from "./components/layout/Navbar";
 import AdminRoute from "./components/admin/AdminRoute";
+import DateTimeWidget from "./components/common/DateTimeWidget";
 
 // Public Pages
 import Home from "./pages/Home";
@@ -323,6 +324,7 @@ function App() {
         <ThemeProvider>
           <div className="App">
             <AppRoutes />
+            <DateTimeWidget />
           </div>
         </ThemeProvider>
       </AuthProvider>
