@@ -1,31 +1,33 @@
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../../services/api';
-import { Save, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import api from "../../services/api";
+import { Save, Plus, Trash2, ArrowLeft, Loader } from "lucide-react";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const EditProblem = () => {
+  const { isDark } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    difficulty: 'easy',
+    title: "",
+    description: "",
+    difficulty: "easy",
     timeLimit: 2000,
     memoryLimit: 256,
-    inputFormat: '',
-    outputFormat: '',
-    constraints: '',
-    tags: ''
+    inputFormat: "",
+    outputFormat: "",
+    constraints: "",
+    tags: "",
   });
 
   const [sampleTestCases, setSampleTestCases] = useState([
-    { input: '', expectedOutput: '' }
+    { input: "", expectedOutput: "" },
   ]);
 
   const [hiddenTestCases, setHiddenTestCases] = useState([
-    { input: '', expectedOutput: '' }
+    { input: "", expectedOutput: "" },
   ]);
 
   useEffect(() => {
@@ -35,23 +37,23 @@ const EditProblem = () => {
   const fetchProblem = async () => {
     try {
       setLoading(true);
-      console.log('🔄 Fetching problem:', id);
-      
+      console.log("🔄 Fetching problem:", id);
+
       const response = await api.get(`/problems/${id}`);
       const problem = response.data.problem;
-      
-      console.log('📝 Problem data:', problem);
+
+      console.log("📝 Problem data:", problem);
 
       setFormData({
-        title: problem.title || '',
-        description: problem.description || '',
-        difficulty: problem.difficulty || 'easy',
+        title: problem.title || "",
+        description: problem.description || "",
+        difficulty: problem.difficulty || "easy",
         timeLimit: problem.timeLimit || 2000,
         memoryLimit: problem.memoryLimit || 256,
-        inputFormat: problem.inputFormat || '',
-        outputFormat: problem.outputFormat || '',
-        constraints: problem.constraints || '',
-        tags: problem.tags?.join(', ') || ''
+        inputFormat: problem.inputFormat || "",
+        outputFormat: problem.outputFormat || "",
+        constraints: problem.constraints || "",
+        tags: problem.tags?.join(", ") || "",
       });
 
       // Load test cases
@@ -62,11 +64,10 @@ const EditProblem = () => {
       if (problem.hiddenTestCases && problem.hiddenTestCases.length > 0) {
         setHiddenTestCases(problem.hiddenTestCases);
       }
-
     } catch (error) {
-      console.error('❌ Error fetching problem:', error);
-      alert('Failed to load problem');
-      navigate('/admin/problems');
+      console.error("❌ Error fetching problem:", error);
+      alert("Failed to load problem");
+      navigate("/admin/problems");
     } finally {
       setLoading(false);
     }
@@ -75,12 +76,12 @@ const EditProblem = () => {
   const handleChange = (e) => {
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const addSampleTestCase = () => {
-    setSampleTestCases([...sampleTestCases, { input: '', expectedOutput: '' }]);
+    setSampleTestCases([...sampleTestCases, { input: "", expectedOutput: "" }]);
   };
 
   const removeSampleTestCase = (index) => {
@@ -94,7 +95,7 @@ const EditProblem = () => {
   };
 
   const addHiddenTestCase = () => {
-    setHiddenTestCases([...hiddenTestCases, { input: '', expectedOutput: '' }]);
+    setHiddenTestCases([...hiddenTestCases, { input: "", expectedOutput: "" }]);
   };
 
   const removeHiddenTestCase = (index) => {
@@ -112,23 +113,30 @@ const EditProblem = () => {
     setUpdating(true);
 
     try {
-      const tagsArray = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
-      
+      const tagsArray = formData.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag);
+
       const payload = {
         ...formData,
         tags: tagsArray,
-        sampleTestCases: sampleTestCases.filter(tc => tc.input && tc.expectedOutput),
-        hiddenTestCases: hiddenTestCases.filter(tc => tc.input && tc.expectedOutput)
+        sampleTestCases: sampleTestCases.filter(
+          (tc) => tc.input && tc.expectedOutput
+        ),
+        hiddenTestCases: hiddenTestCases.filter(
+          (tc) => tc.input && tc.expectedOutput
+        ),
       };
 
-      console.log('📤 Updating problem with:', payload);
+      console.log("📤 Updating problem with:", payload);
 
       await api.put(`/problems/${id}`, payload);
-      alert('Problem updated successfully!');
-      navigate('/admin/problems');
+      alert("Problem updated successfully!");
+      navigate("/admin/problems");
     } catch (error) {
-      console.error('❌ Error updating problem:', error);
-      alert(error.response?.data?.error || 'Failed to update problem');
+      console.error("❌ Error updating problem:", error);
+      alert(error.response?.data?.error || "Failed to update problem");
     } finally {
       setUpdating(false);
     }
@@ -136,26 +144,48 @@ const EditProblem = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+      <div
+        className={`flex justify-center items-center h-screen ${
+          isDark ? "bg-slate-900" : "bg-gray-50"
+        }`}
+      >
+        <div className="flex flex-col items-center gap-4">
+          <Loader
+            className={`animate-spin ${
+              isDark ? "text-cyan-400" : "text-blue-500"
+            }`}
+            size={40}
+          />
+          <p className={isDark ? "text-gray-400" : "text-gray-600"}>
+            \u0110ang tải dữ liệu...
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div
+      className={`min-h-screen transition-colors duration-300 ${
+        isDark
+          ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950"
+          : "bg-gradient-to-br from-slate-50 via-white to-slate-100"
+      }`}
+    >
       <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <button
-              onClick={() => navigate('/admin/problems')}
+              onClick={() => navigate("/admin/problems")}
               className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-2"
             >
               <ArrowLeft size={20} />
               <span>Back to Problems</span>
             </button>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Edit Problem</h1>
+            <h1 className="text-4xl font-bold text-gray-800 mb-2">
+              Edit Problem
+            </h1>
             <p className="text-gray-600">Update the problem details</p>
           </div>
         </div>
@@ -163,8 +193,10 @@ const EditProblem = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Basic Information</h2>
-            
+            <h2 className="text-xl font-bold text-gray-800 mb-4">
+              Basic Information
+            </h2>
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -303,7 +335,9 @@ const EditProblem = () => {
           {/* Sample Test Cases */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Sample Test Cases (Visible)</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                Sample Test Cases (Visible)
+              </h2>
               <button
                 type="button"
                 onClick={addSampleTestCase}
@@ -317,7 +351,9 @@ const EditProblem = () => {
             {sampleTestCases.map((testCase, index) => (
               <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-gray-700">Test Case {index + 1}</h3>
+                  <h3 className="font-semibold text-gray-700">
+                    Test Case {index + 1}
+                  </h3>
                   {sampleTestCases.length > 1 && (
                     <button
                       type="button"
@@ -330,20 +366,32 @@ const EditProblem = () => {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Input</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Input
+                    </label>
                     <textarea
                       value={testCase.input}
-                      onChange={(e) => updateSampleTestCase(index, 'input', e.target.value)}
+                      onChange={(e) =>
+                        updateSampleTestCase(index, "input", e.target.value)
+                      }
                       rows={3}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Input data..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Expected Output</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Expected Output
+                    </label>
                     <textarea
                       value={testCase.expectedOutput}
-                      onChange={(e) => updateSampleTestCase(index, 'expectedOutput', e.target.value)}
+                      onChange={(e) =>
+                        updateSampleTestCase(
+                          index,
+                          "expectedOutput",
+                          e.target.value
+                        )
+                      }
                       rows={3}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Expected output..."
@@ -357,7 +405,9 @@ const EditProblem = () => {
           {/* Hidden Test Cases */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Hidden Test Cases</h2>
+              <h2 className="text-xl font-bold text-gray-800">
+                Hidden Test Cases
+              </h2>
               <button
                 type="button"
                 onClick={addHiddenTestCase}
@@ -371,7 +421,9 @@ const EditProblem = () => {
             {hiddenTestCases.map((testCase, index) => (
               <div key={index} className="mb-4 p-4 bg-gray-50 rounded-lg">
                 <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-semibold text-gray-700">Hidden Test Case {index + 1}</h3>
+                  <h3 className="font-semibold text-gray-700">
+                    Hidden Test Case {index + 1}
+                  </h3>
                   {hiddenTestCases.length > 1 && (
                     <button
                       type="button"
@@ -384,19 +436,31 @@ const EditProblem = () => {
                 </div>
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Input</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Input
+                    </label>
                     <textarea
                       value={testCase.input}
-                      onChange={(e) => updateHiddenTestCase(index, 'input', e.target.value)}
+                      onChange={(e) =>
+                        updateHiddenTestCase(index, "input", e.target.value)
+                      }
                       rows={3}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Expected Output</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Expected Output
+                    </label>
                     <textarea
                       value={testCase.expectedOutput}
-                      onChange={(e) => updateHiddenTestCase(index, 'expectedOutput', e.target.value)}
+                      onChange={(e) =>
+                        updateHiddenTestCase(
+                          index,
+                          "expectedOutput",
+                          e.target.value
+                        )
+                      }
                       rows={3}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
@@ -410,7 +474,7 @@ const EditProblem = () => {
           <div className="flex justify-end space-x-4">
             <button
               type="button"
-              onClick={() => navigate('/admin/problems')}
+              onClick={() => navigate("/admin/problems")}
               className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
             >
               Cancel
@@ -421,7 +485,7 @@ const EditProblem = () => {
               className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
             >
               <Save size={20} />
-              <span>{updating ? 'Updating...' : 'Update Problem'}</span>
+              <span>{updating ? "Updating..." : "Update Problem"}</span>
             </button>
           </div>
         </form>
