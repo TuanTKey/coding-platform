@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { Save, Plus, Trash2, ArrowLeft } from 'lucide-react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const CreateContest = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [loading, setLoading] = useState(false);
   const [problems, setProblems] = useState([]);
   const [selectedProblems, setSelectedProblems] = useState([]);
@@ -80,31 +82,49 @@ const CreateContest = () => {
   const defaultEnd = new Date(defaultStart.getTime() + 2 * 60 * 60 * 1000); // +2 hours
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen transition-colors duration-300 ${
+      isDark 
+        ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950'
+        : 'bg-gradient-to-br from-slate-50 via-white to-slate-100'
+    }`}>
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <button
               onClick={() => navigate('/admin/contests')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 mb-2"
+              className={`flex items-center space-x-2 mb-2 transition-colors ${
+                isDark
+                  ? 'text-slate-400 hover:text-slate-200'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
             >
               <ArrowLeft size={20} />
               <span>Quay lại</span>
             </button>
-            <h1 className="text-4xl font-bold text-gray-800 mb-2">Tạo Cuộc thi Mới</h1>
-            <p className="text-gray-600">Thiết lập cuộc thi lập trình mới</p>
+            <h1 className={`text-4xl font-bold mb-2 ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>Tạo Cuộc thi Mới</h1>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Thiết lập cuộc thi lập trình mới</p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Thông tin Cuộc thi</h2>
+          <div className={`rounded-xl shadow-md p-6 transition-colors ${
+            isDark
+              ? 'bg-slate-800 border border-slate-700'
+              : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>Thông tin Cuộc thi</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className={`block text-sm font-semibold mb-2 ${
+                  isDark ? 'text-slate-200' : 'text-gray-700'
+                }`}>
                   Tên cuộc thi *
                 </label>
                 <input
@@ -113,13 +133,19 @@ const CreateContest = () => {
                   value={formData.title}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                    isDark
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
                   placeholder="Ví dụ: Cuộc thi Lập trình Hàng tuần"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className={`block text-sm font-semibold mb-2 ${
+                  isDark ? 'text-slate-200' : 'text-gray-700'
+                }`}>
                   Mô tả *
                 </label>
                 <textarea
@@ -128,14 +154,20 @@ const CreateContest = () => {
                   onChange={handleChange}
                   required
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                    isDark
+                      ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
                   placeholder="Mô tả về cuộc thi..."
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Thời gian bắt đầu *
                   </label>
                   <input
@@ -144,13 +176,19 @@ const CreateContest = () => {
                     value={formData.startTime}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                      isDark
+                        ? 'bg-slate-700 border-slate-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     min={new Date().toISOString().slice(0, 16)}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Thời gian kết thúc *
                   </label>
                   <input
@@ -159,7 +197,11 @@ const CreateContest = () => {
                     value={formData.endTime}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                      isDark
+                        ? 'bg-slate-700 border-slate-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                     min={formData.startTime || new Date().toISOString().slice(0, 16)}
                   />
                 </div>
@@ -167,7 +209,9 @@ const CreateContest = () => {
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Thời lượng (phút) *
                   </label>
                   <input
@@ -178,12 +222,18 @@ const CreateContest = () => {
                     required
                     min="30"
                     max="10080"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                      isDark
+                        ? 'bg-slate-700 border-slate-600 text-white'
+                        : 'bg-white border-gray-300 text-gray-900'
+                    }`}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className={`block text-sm font-semibold mb-2 ${
+                    isDark ? 'text-slate-200' : 'text-gray-700'
+                  }`}>
                     Quy định
                   </label>
                   <input
@@ -191,7 +241,11 @@ const CreateContest = () => {
                     name="rules"
                     value={formData.rules}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors ${
+                      isDark
+                        ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400'
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
                     placeholder="Quy định cuộc thi..."
                   />
                 </div>
@@ -205,7 +259,9 @@ const CreateContest = () => {
                   onChange={handleChange}
                   className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
                 />
-                <label className="text-sm font-semibold text-gray-700">
+                <label className={`text-sm font-semibold ${
+                  isDark ? 'text-slate-200' : 'text-gray-700'
+                }`}>
                   Cuộc thi công khai (ai cũng có thể tham gia)
                 </label>
               </div>
@@ -213,27 +269,45 @@ const CreateContest = () => {
           </div>
 
           {/* Problem Selection */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Chọn Bài tập</h2>
+          <div className={`rounded-xl shadow-md p-6 transition-colors ${
+            isDark
+              ? 'bg-slate-800 border border-slate-700'
+              : 'bg-white'
+          }`}>
+            <h2 className={`text-xl font-bold mb-4 ${
+              isDark ? 'text-white' : 'text-gray-800'
+            }`}>Chọn Bài tập</h2>
             
-            <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+            <div className={`max-h-96 overflow-y-auto border rounded-lg ${
+              isDark
+                ? 'border-slate-700'
+                : 'border-gray-200'
+            }`}>
               {problems.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Chưa có bài tập nào</p>
+                <p className={`text-center py-8 ${
+                  isDark ? 'text-slate-400' : 'text-gray-500'
+                }`}>Chưa có bài tập nào</p>
               ) : (
-                <div className="divide-y divide-gray-200">
+                <div className={isDark ? 'divide-slate-700' : 'divide-gray-200'}>
                   {problems.map((problem) => (
                     <div
                       key={problem._id}
                       className={`p-4 cursor-pointer transition-colors ${
                         selectedProblems.includes(problem._id)
-                          ? 'bg-purple-50 border-l-4 border-l-purple-500'
+                          ? isDark
+                            ? 'bg-slate-700 border-l-4 border-l-purple-500'
+                            : 'bg-purple-50 border-l-4 border-l-purple-500'
+                          : isDark
+                          ? 'hover:bg-slate-700'
                           : 'hover:bg-gray-50'
                       }`}
                       onClick={() => handleProblemSelect(problem._id)}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-800">{problem.title}</h3>
+                          <h3 className={`font-semibold ${
+                            isDark ? 'text-white' : 'text-gray-800'
+                          }`}>{problem.title}</h3>
                           <div className="flex items-center space-x-3 mt-2">
                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
                               problem.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
@@ -243,7 +317,9 @@ const CreateContest = () => {
                               {problem.difficulty === 'easy' ? 'DỄ' : 
                                problem.difficulty === 'medium' ? 'TRUNG BÌNH' : 'KHÓ'}
                             </span>
-                            <span className="text-sm text-gray-600">
+                            <span className={`text-sm ${
+                              isDark ? 'text-slate-400' : 'text-gray-600'
+                            }`}>
                               {problem.tags?.slice(0, 3).join(', ')}
                             </span>
                           </div>
@@ -261,7 +337,9 @@ const CreateContest = () => {
               )}
             </div>
             
-            <div className="mt-4 text-sm text-gray-600 flex justify-between items-center">
+            <div className={`mt-4 text-sm flex justify-between items-center ${
+              isDark ? 'text-slate-400' : 'text-gray-600'
+            }`}>
               <span>Đã chọn: {selectedProblems.length} bài tập</span>
               {selectedProblems.length > 0 && (
                 <button
@@ -280,14 +358,18 @@ const CreateContest = () => {
             <button
               type="button"
               onClick={() => navigate('/admin/contests')}
-              className="px-6 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50"
+              className={`px-6 py-3 border rounded-lg font-semibold transition-colors ${
+                isDark
+                  ? 'border-slate-600 text-slate-200 hover:bg-slate-700'
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+              className="flex items-center space-x-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 transition-all"
             >
               <Save size={20} />
               <span>{loading ? 'Đang tạo...' : 'Tạo Cuộc thi'}</span>

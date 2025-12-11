@@ -382,48 +382,48 @@ const AdminContestSubmissions = () => {
 
         {/* Statistics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow-md p-4 text-center border-l-4 border-purple-500">
+          <div className={`rounded-xl shadow-md p-4 text-center border-l-4 border-purple-500 transition-colors ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
             <div className="text-2xl font-bold text-purple-600">
               {filteredData.length}
             </div>
-            <div className="text-sm text-gray-600">Bài nộp</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Bài nộp</div>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center border-l-4 border-green-500">
+          <div className={`rounded-xl shadow-md p-4 text-center border-l-4 border-green-500 transition-colors ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
             <div className="text-2xl font-bold text-green-600">
               {new Set(filteredData.map((s) => s.user?._id)).size}
             </div>
-            <div className="text-sm text-gray-600">Học sinh</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Học sinh</div>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center border-l-4 border-yellow-500">
+          <div className={`rounded-xl shadow-md p-4 text-center border-l-4 border-yellow-500 transition-colors ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
             <div className="text-2xl font-bold text-yellow-600">
               {new Set(filteredData.map((s) => s.contestId)).size}
             </div>
-            <div className="text-sm text-gray-600">Cuộc thi</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Cuộc thi</div>
           </div>
-          <div className="bg-white rounded-xl shadow-md p-4 text-center border-l-4 border-orange-500">
+          <div className={`rounded-xl shadow-md p-4 text-center border-l-4 border-orange-500 transition-colors ${isDark ? 'bg-slate-800/50' : 'bg-white'}`}>
             <div className="text-2xl font-bold text-orange-600">
               {new Set(filteredData.map((s) => s.user?.class)).size}
             </div>
-            <div className="text-sm text-gray-600">Lớp học</div>
+            <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Lớp học</div>
           </div>
         </div>
 
         {/* Submissions Table */}
-        <div className="bg-white rounded-xl shadow-md overflow-hidden">
+        <div className={`rounded-xl shadow-md overflow-hidden transition-colors border ${isDark ? 'bg-slate-800/50 border-slate-700/50' : 'bg-white border-gray-200'}`}>
           {filteredData.length === 0 ? (
             <div className="text-center py-12">
-              <Trophy size={48} className="mx-auto mb-4 text-gray-400" />
-              <p className="text-gray-500 text-lg">Không có bài nộp nào</p>
-              <p className="text-sm text-gray-400 mt-2">
+              <Trophy size={48} className={`mx-auto mb-4 ${isDark ? 'text-slate-500' : 'text-gray-400'}`} />
+              <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Không có bài nộp nào</p>
+              <p className={`text-sm mt-2 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
                 Thử thay đổi bộ lọc để xem kết quả khác
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-purple-50 border-b">
+                <thead className={`border-b ${isDark ? 'bg-slate-700/50 border-slate-600/50' : 'bg-purple-50 border-gray-200'}`}>
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                    <th className={`px-6 py-4 text-left text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-gray-600'}`}>
                       Học sinh
                     </th>
                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
@@ -449,10 +449,10 @@ const AdminContestSubmissions = () => {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className={`divide-y ${isDark ? 'divide-slate-700/30' : 'divide-gray-200'}`}>
                   {filteredData.map((item, index) => (
                     <>
-                      <tr key={item.key} className="hover:bg-gray-50">
+                      <tr key={item.key} className={`transition-colors ${isDark ? 'hover:bg-slate-700/30' : 'hover:bg-gray-50'}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
                             <div className="relative">
