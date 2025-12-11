@@ -1,264 +1,336 @@
-# 🎯 CodeJudge Mobile App - React Native/Expo
+# Coding Platform - React Native Mobile App
 
-Mobile application for CodeJudge Online Coding Platform built with React Native and Expo.
+A comprehensive React Native mobile application built with Expo and Zustand, providing a mobile-first experience for competitive coding platform.
 
 ## 📱 Features
 
-### Authentication
-- User registration with role selection (Student/Teacher)
-- Secure JWT-based authentication
-- Token persistence with encrypted secure storage
+- **User Authentication**
 
-### Problem Solving
-- Browse all coding problems
-- View problem details with descriptions
-- Support for multiple programming languages
-- Difficulty levels (Easy, Medium, Hard)
-- Submission tracking
+  - Sign up with class selection
+  - Secure login with JWT tokens
+  - Persistent authentication using Secure Store
 
-### Contests
-- View and browse online contests
-- Contest status (Active/Upcoming)
-- Join/Leave contests
-- Contest leaderboard
-- Real-time participant count
+- **Problem Solving**
 
-### User Profile
-- View user statistics (submissions, solved problems)
-- User rating and rank
-- Edit profile information
-- View submission history
-- Secure logout
+  - Browse problems by difficulty (Easy, Medium, Hard)
+  - Search and filter problems
+  - Write code in multiple languages (JavaScript, Python, Java, C++, C)
+  - Real-time submission feedback
+
+- **Contests**
+
+  - View upcoming and ongoing contests
+  - Join contests
+  - Track contest progress
+  - View contest leaderboards
+
+- **Submissions**
+
+  - Track all submissions
+  - View detailed submission results
+  - Test case execution details
+  - Error tracking and analysis
+
+- **User Profile**
+
+  - View personal statistics
+  - Edit profile information
+  - Track solved problems
+  - View acceptance rate
+
+- **Dark Mode Support**
+  - System theme detection
+  - Manual theme toggle
+  - Persistent theme preference
 
 ## 🛠️ Tech Stack
 
-- **Frontend Framework**: React Native with Expo
+- **Framework**: React Native with Expo
+- **Navigation**: Expo Router
 - **State Management**: Zustand
-- **Navigation**: React Navigation (Bottom Tabs + Stack)
+- **Styling**: NativeWind (Tailwind CSS for React Native)
 - **HTTP Client**: Axios
-- **Storage**: Expo Secure Store (for tokens)
-- **UI Components**: Custom styled components + Linear Gradient
+- **Storage**: Expo Secure Store
+- **Authentication**: JWT
 
-## 📦 Installation
+## 📋 Prerequisites
 
-### Prerequisites
-- Node.js >= 18.x
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
+- Node.js 16+ and npm
+- Expo CLI: `npm install -g expo-cli`
+- Android Studio or Xcode (for running on simulators)
+- For physical device: Expo Go app
 
-### Setup Steps
+## 🚀 Installation & Setup
 
-1. **Navigate to mobile folder:**
-   ```bash
-   cd mobile
-   ```
+### 1. Install Dependencies
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Create `.env` file:**
-   ```bash
-   cp .env.example .env.local
-   ```
-
-4. **Configure API URL** in `.env.local`:
-   ```
-   EXPO_PUBLIC_API_URL=http://YOUR_BACKEND_IP:5000/api
-   ```
-   > For Android emulator use `10.0.2.2:5000` instead of `localhost:5000`
-
-## 🚀 Running the App
-
-### Development (Android)
 ```bash
-npm run android
+cd mobile
+npm install
 ```
 
-### Development (iOS)
-```bash
-npm run ios
+### 2. Configure Environment
+
+Create `.env` file in the mobile folder:
+
+```env
+EXPO_PUBLIC_API_URL=http://YOUR_BACKEND_URL:5000/api
 ```
 
-### Development (Web)
-```bash
-npm run web
+For local development:
+
+```env
+EXPO_PUBLIC_API_URL=http://10.0.2.2:5000/api  # Android emulator
+EXPO_PUBLIC_API_URL=http://localhost:5000/api # iOS simulator or physical device with appropriate IP
 ```
 
-### Using Expo Go
+### 3. Start the Development Server
+
 ```bash
 npm start
 ```
 
-Then scan the QR code with Expo Go app on your phone.
+### 4. Run on Emulator/Device
+
+**Android Emulator:**
+
+```bash
+npm run android
+```
+
+**iOS Simulator (macOS only):**
+
+```bash
+npm run ios
+```
+
+**Web Browser:**
+
+```bash
+npm run web
+```
+
+**Physical Device:**
+
+- Install Expo Go from App Store or Google Play
+- Scan QR code from terminal
 
 ## 📁 Project Structure
 
 ```
 mobile/
-├── src/
-│   ├── components/          # Reusable UI components
-│   │   └── Button.jsx      # Gradient buttons and cards
-│   ├── screens/            # Screen components
-│   │   ├── LoginScreen.jsx
-│   │   ├── RegisterScreen.jsx
-│   │   ├── ProblemsScreen.jsx
-│   │   ├── ContestsScreen.jsx
-│   │   └── ProfileScreen.jsx
-│   ├── services/           # API integration
-│   │   ├── api.js          # Axios instance with interceptors
-│   │   └── authAPI.js      # Service functions for each endpoint
-│   ├── stores/             # Zustand state management
-│   │   └── authStore.js
-│   ├── hooks/              # Custom React hooks
-│   ├── utils/              # Utility functions
-│   └── navigation/         # Navigation setup
-│       └── RootNavigator.jsx
-├── App.jsx                 # App entry point
-├── index.js               # React Native entry
-├── app.json               # Expo configuration
+├── app/                          # App router screens
+│   ├── _layout.js               # Root layout
+│   ├── auth/                    # Authentication screens
+│   │   ├── login.js
+│   │   ├── register.js
+│   │   └── _layout.js
+│   ├── (tabs)/                  # Main tabs navigation
+│   │   ├── problems.js          # Problems list
+│   │   ├── contests.js          # Contests list
+│   │   ├── submissions.js       # User submissions
+│   │   ├── profile.js           # User profile
+│   │   └── _layout.js
+│   ├── problems/[id].js         # Problem detail & code editor
+│   ├── contests/[id].js         # Contest detail
+│   ├── submissions/[id].js      # Submission detail
+│   └── profile/edit.js          # Edit profile
+├── services/                     # API services
+│   ├── api.js                   # Axios config & interceptors
+│   ├── auth.js                  # Authentication
+│   ├── problem.js               # Problem operations
+│   ├── submission.js            # Submission operations
+│   ├── contest.js               # Contest operations
+│   └── user.js                  # User operations
+├── stores/                      # Zustand state management
+│   ├── authStore.js            # Auth state
+│   ├── problemStore.js         # Problem state
+│   └── submissionStore.js      # Submission state
+├── components/                  # Reusable components
+│   ├── Common.jsx              # Common UI components
+│   ├── Layout.jsx              # Layout components
+│   ├── Badge.jsx               # Badge components
+│   └── Form.jsx                # Form components
+├── contexts/                    # React contexts
+│   └── ThemeContext.js         # Theme (dark/light mode)
+├── hooks/                       # Custom hooks
+│   └── useAuth.js              # Auth hook
+├── utils/                       # Utility functions
+│   └── helpers.js              # Helper functions
+├── app.json                     # Expo configuration
 ├── package.json
-└── README.md
+├── tailwind.config.js
+├── babel.config.js
+└── metro.config.js
 ```
 
-## 🔑 API Endpoints Integration
+## 🔌 API Integration
 
-The app connects to the following backend endpoints:
+The app connects to your backend API. Make sure your backend is running on the configured URL.
 
-### Authentication
-- `POST /auth/register` - User registration
+### Authentication Flow
+
+1. User registers/logs in
+2. Backend returns JWT token
+3. Token stored in secure storage
+4. Token automatically attached to all API requests
+5. 401 responses trigger re-authentication
+
+### API Endpoints Used
+
+**Auth:**
+
+- `POST /auth/register` - Register new user
 - `POST /auth/login` - User login
 
-### Problems
-- `GET /problems` - List all problems (paginated)
-- `GET /problems/:slug` - Get problem details
+**Problems:**
 
-### Submissions
-- `POST /submissions` - Submit code
-- `POST /submissions/run` - Run code
+- `GET /problems` - List all problems
+- `GET /problems/:id` - Get problem details
+- `GET /problems/slug/:slug` - Get problem by slug
+
+**Submissions:**
+
+- `POST /submissions` - Submit solution
+- `GET /submissions/:id` - Get submission status
 - `GET /submissions` - Get user submissions
 
-### Contests
+**Contests:**
+
 - `GET /contests` - List all contests
 - `GET /contests/:id` - Get contest details
 - `POST /contests/:id/join` - Join contest
-- `POST /contests/:id/leaderboard` - Get leaderboard
+- `GET /contests/:id/leaderboard` - Contest leaderboard
 
-### Users
+**Users:**
+
 - `GET /users/:id` - Get user profile
-- `GET /users/:id/stats` - Get user statistics
-- `GET /users/leaderboard` - Global leaderboard
+- `GET /users/me` - Get current user
+- `PUT /users/me` - Update profile
+
+## 🎨 Customization
+
+### Theming
+
+Colors defined in `tailwind.config.js`:
+
+```javascript
+colors: {
+  primary: "#06B6D4",    // Cyan
+  secondary: "#2563EB",  // Blue
+  success: "#10B981",    // Green
+  error: "#EF4444",      // Red
+  warning: "#F59E0B",    // Amber
+}
+```
+
+### Supported Languages
+
+In `app/problems/[id].js`:
+
+```javascript
+const LANGUAGES = ["javascript", "python", "java", "cpp", "c"];
+```
 
 ## 🔐 Security Features
 
-- **JWT Authentication**: Token-based authentication
-- **Secure Storage**: Tokens stored in encrypted secure storage
-- **Request Interceptors**: Automatic token injection in headers
-- **Response Interceptors**: Automatic logout on 401 errors
-- **HTTPS Ready**: Supports both HTTP and HTTPS
+- JWT-based authentication
+- Secure storage with Expo Secure Store
+- HTTPS ready
+- Automatic token refresh on 401
+- Password never stored locally
 
-## 🎨 UI/UX Features
+## 📊 State Management
 
-- **Gradient Design**: Modern gradient buttons and backgrounds
-- **Card Components**: Reusable card layouts
-- **Bottom Tab Navigation**: Easy access to main features
-- **Loading States**: Activity indicators for async operations
-- **Error Handling**: User-friendly error messages
-- **Responsive Design**: Works on different screen sizes
+Using Zustand for global state:
 
-## 📝 Authentication Flow
+```javascript
+// Auth store
+useAuthStore() -> { user, isAuthenticated, login, logout, etc }
 
-1. **First Launch**
-   - App checks for stored token
-   - If found, user is logged in
-   - If not, shows login/register screen
+// Problem store
+useProblemStore() -> { problems, currentProblem, getProblems, etc }
 
-2. **Registration**
-   - User creates account with name, email, password, and role
-   - Backend returns JWT token
-   - Token is stored securely
-   - User is redirected to main app
+// Submission store
+useSubmissionStore() -> { submissions, getSubmissionStatus, etc }
+```
 
-3. **Login**
-   - User enters email and password
-   - Backend validates and returns JWT token
-   - Token is stored securely
-   - User is redirected to main app
+## 🐛 Debugging
 
-4. **Logout**
-   - Token is deleted from secure storage
-   - User is redirected to login screen
+Enable React Native debugger:
 
-## 🧪 Development Tips
+```bash
+npm start -- --localhost
+```
 
-### API Testing
-- Backend must be running on configured IP/port
-- Use Postman or similar tool to test API endpoints
-- Check Network tab in Expo DevTools for requests
+View logs:
 
-### Debugging
-- Use React Native Debugger
-- Access Expo DevTools with `d` key during development
-- Check console logs in terminal
+```bash
+expo logs
+```
 
-### Building for Production
+## 📦 Building for Production
 
-**Android APK:**
+### Build APK (Android)
+
 ```bash
 eas build --platform android
 ```
 
-**iOS App:**
+### Build IPA (iOS)
+
 ```bash
 eas build --platform ios
 ```
 
-> Requires EAS (Expo Application Services) account
+First time setup:
 
-## 📱 Supported Devices
-
-- Android 5.1+ (API 22+)
-- iOS 13.0+
-- Web browsers (Chromium-based preferred)
-
-## 🐛 Troubleshooting
-
-### App won't connect to backend
-- Check if backend is running
-- Verify API URL in `.env.local`
-- For emulator, use `10.0.2.2` instead of `localhost`
-
-### Token not persisting
-- Clear app cache: `npm expo prebuild --clean`
-- Check Secure Store permissions
-
-### UI looks wrong
-- Clear cache: `npm expo build:web --clear`
-- Try different device simulator
-
-## 📚 Related Documentation
-
-- [Backend README](../README.md)
-- [Expo Documentation](https://docs.expo.dev/)
-- [React Navigation](https://reactnavigation.org/)
-- [Zustand](https://github.com/pmndrs/zustand)
-
-## 👨‍💻 Future Enhancements
-
-- [ ] Code editor with syntax highlighting
-- [ ] Real-time code execution
-- [ ] Offline mode support
-- [ ] Push notifications
-- [ ] Social features (follow, messaging)
-- [ ] Dark mode theme
-- [ ] Multiple language support
-- [ ] Advanced contest features
-
-## 📄 License
-
-Same as main project
+```bash
+eas build:configure
+```
 
 ## 🤝 Contributing
 
-Follow the same contribution guidelines as the main CodeJudge project.
+1. Create feature branch: `git checkout -b feature/NewFeature`
+2. Commit changes: `git commit -m 'Add NewFeature'`
+3. Push to branch: `git push origin feature/NewFeature`
+4. Open Pull Request
+
+## 📝 Notes
+
+- Images/assets can be added to `assets/` folder
+- Modify class options in `Register` screen for your institution
+- Customize colors in `tailwind.config.js`
+- Update API URL in `.env` for different environments
+
+## 🆘 Troubleshooting
+
+### Connection Issues
+
+- Check backend is running
+- Verify API URL in `.env`
+- Check network connectivity
+
+### Authentication Issues
+
+- Clear Secure Store: `expo-secure-store` will auto-clear on logout
+- Check token expiration
+- Verify JWT secret matches backend
+
+### Build Issues
+
+- Clear cache: `rm -rf node_modules && npm install`
+- Clear Expo cache: `expo start -c`
+- Check Node version: `node --version`
+
+## 📄 License
+
+This project is part of the Coding Platform system.
+
+## 👥 Support
+
+For issues and questions, contact the development team.
+
+---
+
+Happy Coding! 🚀

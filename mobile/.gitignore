@@ -1,35 +1,17 @@
-# Expo
 node_modules/
+dist/
 .expo/
 .expo-shared/
-dist/
 npm-debug.*
+.env
+.env.local
+.env.production.local
+.DS_Store
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
-
-# React Native
-.DS_Store
-*.log
-*.class
-*.jar
-*.war
-*.ear
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-.project
-.settings/
-.classpath
-
-# Environment
-.env
-.env.local
+web-build/
 .env.*.local

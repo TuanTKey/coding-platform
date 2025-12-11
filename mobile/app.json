@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "CodeJudge",
-    "slug": "coding-platform-mobile",
+    "name": "Coding Platform",
+    "slug": "coding-platform",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,36 +11,31 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTabletMode": true,
-      "bundleIdentifier": "com.tuantkey.codjudge"
+      "bundleIdentifier": "com.codingplatform.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.tuantkey.codjudge",
-      "permissions": [
-        "android.permission.INTERNET"
-      ]
+      "package": "com.codingplatform.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "scheme": "codjudge",
     "plugins": [
-      "expo-router"
+      [
+        "expo-clipboard",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos."
+        }
+      ]
     ],
     "extra": {
-      "router": {
-        "origin": false
-      },
       "eas": {
-        "projectId": "YOUR_EAS_PROJECT_ID"
+        "projectId": "your-project-id"
       }
     }
   }
