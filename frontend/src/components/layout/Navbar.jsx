@@ -1,8 +1,9 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../admin/AuthContext";
 import { useTheme } from "../../contexts/ThemeContext";
-import { Code2, Search, Menu, X, Sun, Moon, ChevronDown } from "lucide-react";
+import { Search, Menu, X, Sun, Moon, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import CodeJudgeLogo from "./CodeJudgeLogo";
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -36,36 +37,12 @@ const Navbar = () => {
     >
       <div className="px-6 mx-auto max-w-7xl">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo with Satellites */}
           <Link
             to="/"
-            className="flex items-center gap-3 transition-opacity group hover:opacity-80"
+            className="flex items-center gap-3 transition-opacity hover:opacity-80"
           >
-            <div
-              className={`p-2.5 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg hover:shadow-xl group-hover:scale-110 transition-all duration-300 ${
-                isDark
-                  ? "group-hover:shadow-cyan-500/50"
-                  : "group-hover:shadow-cyan-400/50"
-              }`}
-            >
-              <Code2 size={22} strokeWidth={2} />
-            </div>
-            <div>
-              <div
-                className={`text-lg font-bold tracking-tight ${
-                  isDark ? "text-white" : "text-gray-900"
-                }`}
-              >
-                Code<span className="text-cyan-400">Judge</span>
-              </div>
-              <div
-                className={`text-xs font-medium ${
-                  isDark ? "text-cyan-400/60" : "text-cyan-600/60"
-                }`}
-              >
-                Learn to Code
-              </div>
-            </div>
+            <CodeJudgeLogo />
           </Link>
 
           {/* Search Bar - Hidden on Mobile */}
