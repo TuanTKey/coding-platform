@@ -3,13 +3,14 @@ import * as SecureStore from 'expo-secure-store';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+console.log('API URL:', API_URL); // Debug log
+
 const apiClient = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 30000,
-});
+  timeout: 60000, // Increased from 30s to 60s
 
 // Request interceptor - Add auth token
 apiClient.interceptors.request.use(
