@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Coding Platform",
-    "slug": "coding-platform",
+    "name": "CodeJudge",
+    "slug": "codejudge-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,31 +11,37 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTabletMode": true,
-      "bundleIdentifier": "com.codingplatform.app"
+      "bundleIdentifier": "com.tuantkey.codejudge",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.codingplatform.app"
+      "package": "com.tuantkey.codejudge",
+      "permissions": []
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
-      [
-        "expo-clipboard",
-        {
-          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos."
-        }
-      ]
+      "expo-secure-store"
     ],
     "extra": {
+      "router": {
+        "origin": false
+      },
       "eas": {
-        "projectId": "your-project-id"
+        "projectId": "codejudge-mobile"
       }
     }
   }

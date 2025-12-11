@@ -1,336 +1,576 @@
-# Coding Platform - React Native Mobile App
-
-A comprehensive React Native mobile application built with Expo and Zustand, providing a mobile-first experience for competitive coding platform.
-
-## 📱 Features
-
-- **User Authentication**
-
-  - Sign up with class selection
-  - Secure login with JWT tokens
-  - Persistent authentication using Secure Store
-
-- **Problem Solving**
-
-  - Browse problems by difficulty (Easy, Medium, Hard)
-  - Search and filter problems
-  - Write code in multiple languages (JavaScript, Python, Java, C++, C)
-  - Real-time submission feedback
-
-- **Contests**
-
-  - View upcoming and ongoing contests
-  - Join contests
-  - Track contest progress
-  - View contest leaderboards
-
-- **Submissions**
-
-  - Track all submissions
-  - View detailed submission results
-  - Test case execution details
-  - Error tracking and analysis
-
-- **User Profile**
-
-  - View personal statistics
-  - Edit profile information
-  - Track solved problems
-  - View acceptance rate
-
-- **Dark Mode Support**
-  - System theme detection
-  - Manual theme toggle
-  - Persistent theme preference
-
-## 🛠️ Tech Stack
-
-- **Framework**: React Native with Expo
-- **Navigation**: Expo Router
-- **State Management**: Zustand
-- **Styling**: NativeWind (Tailwind CSS for React Native)
-- **HTTP Client**: Axios
-- **Storage**: Expo Secure Store
-- **Authentication**: JWT
-
-## 📋 Prerequisites
-
-- Node.js 16+ and npm
-- Expo CLI: `npm install -g expo-cli`
-- Android Studio or Xcode (for running on simulators)
-- For physical device: Expo Go app
-
-## 🚀 Installation & Setup
-
-### 1. Install Dependencies
-
-```bash
-cd mobile
-npm install
-```
-
-### 2. Configure Environment
-
-Create `.env` file in the mobile folder:
-
-```env
-EXPO_PUBLIC_API_URL=http://YOUR_BACKEND_URL:5000/api
-```
-
-For local development:
-
-```env
-EXPO_PUBLIC_API_URL=http://10.0.2.2:5000/api  # Android emulator
-EXPO_PUBLIC_API_URL=http://localhost:5000/api # iOS simulator or physical device with appropriate IP
-```
-
-### 3. Start the Development Server
-
-```bash
-npm start
-```
-
-### 4. Run on Emulator/Device
-
-**Android Emulator:**
-
-```bash
-npm run android
-```
-
-**iOS Simulator (macOS only):**
-
-```bash
-npm run ios
-```
-
-**Web Browser:**
-
-```bash
-npm run web
-```
-
-**Physical Device:**
-
-- Install Expo Go from App Store or Google Play
-- Scan QR code from terminal
-
-## 📁 Project Structure
-
-```
-mobile/
-├── app/                          # App router screens
-│   ├── _layout.js               # Root layout
-│   ├── auth/                    # Authentication screens
-│   │   ├── login.js
-│   │   ├── register.js
-│   │   └── _layout.js
-│   ├── (tabs)/                  # Main tabs navigation
-│   │   ├── problems.js          # Problems list
-│   │   ├── contests.js          # Contests list
-│   │   ├── submissions.js       # User submissions
-│   │   ├── profile.js           # User profile
-│   │   └── _layout.js
-│   ├── problems/[id].js         # Problem detail & code editor
-│   ├── contests/[id].js         # Contest detail
-│   ├── submissions/[id].js      # Submission detail
-│   └── profile/edit.js          # Edit profile
-├── services/                     # API services
-│   ├── api.js                   # Axios config & interceptors
-│   ├── auth.js                  # Authentication
-│   ├── problem.js               # Problem operations
-│   ├── submission.js            # Submission operations
-│   ├── contest.js               # Contest operations
-│   └── user.js                  # User operations
-├── stores/                      # Zustand state management
-│   ├── authStore.js            # Auth state
-│   ├── problemStore.js         # Problem state
-│   └── submissionStore.js      # Submission state
-├── components/                  # Reusable components
-│   ├── Common.jsx              # Common UI components
-│   ├── Layout.jsx              # Layout components
-│   ├── Badge.jsx               # Badge components
-│   └── Form.jsx                # Form components
-├── contexts/                    # React contexts
-│   └── ThemeContext.js         # Theme (dark/light mode)
-├── hooks/                       # Custom hooks
-│   └── useAuth.js              # Auth hook
-├── utils/                       # Utility functions
-│   └── helpers.js              # Helper functions
-├── app.json                     # Expo configuration
-├── package.json
-├── tailwind.config.js
-├── babel.config.js
-└── metro.config.js
-```
-
-## 🔌 API Integration
-
-The app connects to your backend API. Make sure your backend is running on the configured URL.
-
-### Authentication Flow
-
-1. User registers/logs in
-2. Backend returns JWT token
-3. Token stored in secure storage
-4. Token automatically attached to all API requests
-5. 401 responses trigger re-authentication
-
-### API Endpoints Used
-
-**Auth:**
-
-- `POST /auth/register` - Register new user
-- `POST /auth/login` - User login
-
-**Problems:**
-
-- `GET /problems` - List all problems
-- `GET /problems/:id` - Get problem details
-- `GET /problems/slug/:slug` - Get problem by slug
-
-**Submissions:**
-
-- `POST /submissions` - Submit solution
-- `GET /submissions/:id` - Get submission status
-- `GET /submissions` - Get user submissions
-
-**Contests:**
-
-- `GET /contests` - List all contests
-- `GET /contests/:id` - Get contest details
-- `POST /contests/:id/join` - Join contest
-- `GET /contests/:id/leaderboard` - Contest leaderboard
-
-**Users:**
-
-- `GET /users/:id` - Get user profile
-- `GET /users/me` - Get current user
-- `PUT /users/me` - Update profile
-
-## 🎨 Customization
-
-### Theming
-
-Colors defined in `tailwind.config.js`:
-
-```javascript
-colors: {
-  primary: "#06B6D4",    // Cyan
-  secondary: "#2563EB",  // Blue
-  success: "#10B981",    // Green
-  error: "#EF4444",      // Red
-  warning: "#F59E0B",    // Amber
-}
-```
-
-### Supported Languages
-
-In `app/problems/[id].js`:
-
-```javascript
-const LANGUAGES = ["javascript", "python", "java", "cpp", "c"];
-```
-
-## 🔐 Security Features
-
-- JWT-based authentication
-- Secure storage with Expo Secure Store
-- HTTPS ready
-- Automatic token refresh on 401
-- Password never stored locally
-
-## 📊 State Management
-
-Using Zustand for global state:
-
-```javascript
-// Auth store
-useAuthStore() -> { user, isAuthenticated, login, logout, etc }
-
-// Problem store
-useProblemStore() -> { problems, currentProblem, getProblems, etc }
-
-// Submission store
-useSubmissionStore() -> { submissions, getSubmissionStatus, etc }
-```
-
-## 🐛 Debugging
-
-Enable React Native debugger:
-
-```bash
-npm start -- --localhost
-```
-
-View logs:
-
-```bash
-expo logs
-```
-
-## 📦 Building for Production
-
-### Build APK (Android)
-
-```bash
-eas build --platform android
-```
-
-### Build IPA (iOS)
-
-```bash
-eas build --platform ios
-```
-
-First time setup:
-
-```bash
-eas build:configure
-```
-
-## 🤝 Contributing
-
-1. Create feature branch: `git checkout -b feature/NewFeature`
-2. Commit changes: `git commit -m 'Add NewFeature'`
-3. Push to branch: `git push origin feature/NewFeature`
-4. Open Pull Request
-
-## 📝 Notes
-
-- Images/assets can be added to `assets/` folder
-- Modify class options in `Register` screen for your institution
-- Customize colors in `tailwind.config.js`
-- Update API URL in `.env` for different environments
-
-## 🆘 Troubleshooting
-
-### Connection Issues
-
-- Check backend is running
-- Verify API URL in `.env`
-- Check network connectivity
-
-### Authentication Issues
-
-- Clear Secure Store: `expo-secure-store` will auto-clear on logout
-- Check token expiration
-- Verify JWT secret matches backend
-
-### Build Issues
-
-- Clear cache: `rm -rf node_modules && npm install`
-- Clear Expo cache: `expo start -c`
-- Check Node version: `node --version`
-
-## 📄 License
-
-This project is part of the Coding Platform system.
-
-## 👥 Support
-
-For issues and questions, contact the development team.
+# 📚 CodeJudge Mobile App - Complete Documentation
+
+## Table of Contents
+
+1. [Overview](#overview)
+2. [Tech Stack](#tech-stack)
+3. [Project Structure](#project-structure)
+4. [Getting Started](#getting-started)
+5. [Architecture](#architecture)
+6. [API Integration](#api-integration)
+7. [State Management](#state-management)
+8. [Navigation](#navigation)
+9. [Key Features](#key-features)
+10. [Development Guidelines](#development-guidelines)
 
 ---
 
-Happy Coding! 🚀
+## Overview
+
+CodeJudge Mobile is a React Native mobile application that provides a complete coding practice and competition platform. It connects to the same backend API as the web version, allowing users to:
+
+- Solve programming problems
+- Submit code solutions
+- Participate in contests
+- Track their progress on a leaderboard
+- Manage their profile
+
+---
+
+## Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Framework** | React Native (0.73) |
+| **Expo** | v50.0 (for easier development) |
+| **Navigation** | React Navigation v6 (Stack + Bottom Tabs) |
+| **State Management** | Redux Toolkit |
+| **HTTP Client** | Axios with Interceptors |
+| **Form Handling** | React Hook Form |
+| **Date Handling** | date-fns |
+| **Storage** | Expo Secure Store (for auth tokens) |
+| **Language** | JavaScript |
+
+---
+
+## Project Structure
+
+```
+mobile/
+├── App.js                           # Main entry point
+├── app.json                         # Expo configuration
+├── package.json                     # Dependencies
+├── babel.config.js                  # Babel configuration
+├── .env.example                     # Environment variables template
+│
+└── src/
+    ├── screens/                     # Screen components (9 screens)
+    │   ├── LoginScreen.js
+    │   ├── RegisterScreen.js
+    │   ├── SplashScreen.js
+    │   ├── ProblemsScreen.js
+    │   ├── ProblemDetailScreen.js
+    │   ├── ContestsScreen.js
+    │   ├── ContestDetailScreen.js
+    │   ├── ProfileScreen.js
+    │   ├── MySubmissionsScreen.js
+    │   ├── SubmissionDetailScreen.js
+    │   └── LeaderboardScreen.js
+    │
+    ├── components/                  # Reusable UI components
+    │   ├── LoadingSpinner.js
+    │   ├── Button.js
+    │   ├── Input.js
+    │   ├── ProblemCard.js
+    │   ├── SubmissionCard.js
+    │   ├── ContestCard.js
+    │   ├── LanguageSelector.js
+    │   ├── TestCaseViewer.js
+    │   ├── Alerts.js
+    │   ├── Container.js
+    │   └── SectionHeader.js
+    │
+    ├── services/                    # API service layer
+    │   ├── apiClient.js             # Axios instance with interceptors
+    │   ├── authService.js
+    │   ├── problemService.js
+    │   ├── submissionService.js
+    │   ├── contestService.js
+    │   └── userService.js
+    │
+    ├── store/                       # Redux store
+    │   ├── store.js                 # Store configuration
+    │   └── slices/
+    │       ├── authSlice.js
+    │       ├── problemSlice.js
+    │       ├── submissionSlice.js
+    │       ├── contestSlice.js
+    │       └── userSlice.js
+    │
+    ├── navigation/                  # Navigation configuration
+    │   ├── RootNavigator.js         # Main navigation dispatcher
+    │   ├── AuthNavigator.js         # Auth flow (Login, Register)
+    │   └── AppNavigator.js          # App flow (Bottom tabs)
+    │
+    ├── hooks/                       # Custom React hooks
+    │   └── useAsync.js
+    │
+    └── utils/                       # Utility functions
+        ├── constants.js             # App constants
+        ├── dateUtils.js             # Date formatting
+        └── validation.js            # Form validation
+```
+
+---
+
+## Getting Started
+
+### Quick Start
+
+```bash
+# 1. Navigate to mobile directory
+cd mobile
+
+# 2. Install dependencies
+npm install
+
+# 3. Create .env.local file
+cp .env.example .env.local
+
+# 4. Update API URL in .env.local
+# EXPO_PUBLIC_API_URL=http://localhost:5000/api
+
+# 5. Start development server
+npm start
+
+# 6. Choose platform:
+# - Press 'a' for Android
+# - Press 'i' for iOS
+# - Press 'w' for Web
+```
+
+### Prerequisites
+
+- Node.js v16+
+- npm or yarn
+- Expo CLI: `npm install -g expo-cli`
+- Android SDK (for Android) or Xcode (for iOS)
+
+---
+
+## Architecture
+
+### 1. **API Service Layer** (`src/services/`)
+
+All HTTP requests go through the API service layer:
+
+```javascript
+// Example: Fetching problems
+import { problemService } from '@services/problemService';
+
+const data = await problemService.getAllProblems(page, limit, filters);
+```
+
+**Key Features:**
+- ✅ Centralized axios instance with interceptors
+- ✅ JWT token management
+- ✅ Automatic token refresh on 401
+- ✅ Secure token storage with Expo Secure Store
+- ✅ Consistent error handling
+
+### 2. **Redux State Management** (`src/store/`)
+
+Redux Toolkit manages global state:
+
+```javascript
+// Each slice handles a domain (auth, problems, submissions, etc.)
+- authSlice: Login, Register, User session
+- problemSlice: Problems list, Problem details
+- submissionSlice: Submissions, Code execution
+- contestSlice: Contests, Leaderboard
+- userSlice: User profile, Statistics
+```
+
+**Example: Dispatching an action**
+```javascript
+import { loginUser } from '@store/slices/authSlice';
+
+const result = await dispatch(loginUser({
+  username: 'john',
+  password: 'pass123'
+})).unwrap();
+```
+
+### 3. **Navigation** (`src/navigation/`)
+
+Two-tier navigation:
+
+**Auth Navigation** (When not logged in)
+```
+SplashScreen (checks if user is logged in)
+├── LoginScreen
+└── RegisterScreen
+```
+
+**App Navigation** (When logged in)
+```
+BottomTabNavigator
+├── Problems Stack
+│   ├── ProblemsScreen (list)
+│   ├── ProblemDetailScreen
+│   └── SubmissionDetailScreen
+├── Contests Stack
+│   ├── ContestsScreen
+│   └── ContestDetailScreen
+├── Leaderboard Stack
+│   └── LeaderboardScreen
+└── Profile Stack
+    ├── ProfileScreen
+    ├── MySubmissionsScreen
+    └── SubmissionDetailScreen
+```
+
+### 4. **Components** (`src/components/`)
+
+Reusable UI components with consistent styling:
+
+- **Layout**: `Container`, `SectionHeader`
+- **Forms**: `Input`, `Button`, `LanguageSelector`
+- **Lists**: `ProblemCard`, `SubmissionCard`, `ContestCard`
+- **Display**: `LoadingSpinner`, `TestCaseViewer`, `Alerts`
+
+---
+
+## API Integration
+
+### Axios Interceptors
+
+```javascript
+// Request Interceptor: Adds JWT token
+apiClient.interceptors.request.use(async (config) => {
+  const token = await SecureStore.getItemAsync('authToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Response Interceptor: Handles 401 errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    if (error.response?.status === 401) {
+      // Clear token and logout
+      await SecureStore.deleteItemAsync('authToken');
+    }
+    return Promise.reject(error);
+  }
+);
+```
+
+### Service Pattern
+
+Each domain has its own service file:
+
+```javascript
+// problemService.js
+export const problemService = {
+  async getAllProblems(page, limit, filters) { },
+  async getProblemById(id) { },
+  async getProblemBySlug(slug) { },
+  // ...
+};
+```
+
+### API Endpoints
+
+| Method | Endpoint | Service |
+|--------|----------|---------|
+| POST | `/auth/login` | authService.login() |
+| POST | `/auth/register` | authService.register() |
+| GET | `/problems` | problemService.getAllProblems() |
+| GET | `/problems/:id` | problemService.getProblemById() |
+| POST | `/submissions` | submissionService.submitSolution() |
+| GET | `/submissions/:id` | submissionService.getSubmissionStatus() |
+| GET | `/contests` | contestService.getAllContests() |
+| GET | `/users/leaderboard` | userService.getLeaderboard() |
+
+---
+
+## State Management
+
+### Redux Slices
+
+Each slice follows Redux Toolkit pattern:
+
+```javascript
+// Example: authSlice.js
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+
+export const loginUser = createAsyncThunk(
+  'auth/loginUser',
+  async ({ username, password }, { rejectWithValue }) => {
+    try {
+      return await authService.login(username, password);
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const authSlice = createSlice({
+  name: 'auth',
+  initialState: { user: null, token: null, loading: false, error: null },
+  extraReducers: (builder) => {
+    builder
+      .addCase(loginUser.pending, (state) => { state.loading = true; })
+      .addCase(loginUser.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.token = action.payload.token;
+      })
+      .addCase(loginUser.rejected, (state, action) => {
+        state.error = action.payload;
+      });
+  }
+});
+```
+
+### Using Redux in Components
+
+```javascript
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '@store/slices/authSlice';
+
+export const LoginScreen = () => {
+  const dispatch = useDispatch();
+  const { loading, error } = useSelector((state) => state.auth);
+
+  const handleLogin = async () => {
+    try {
+      await dispatch(loginUser({
+        username: 'john',
+        password: 'pass123'
+      })).unwrap();
+    } catch (err) {
+      console.error('Login failed:', err);
+    }
+  };
+};
+```
+
+---
+
+## Navigation
+
+### RootNavigator
+
+The main navigator that switches between Auth and App navigation based on authentication state:
+
+```javascript
+export const RootNavigator = () => {
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
+  return (
+    <NavigationContainer>
+      {isAuthenticated ? <AppNavigator /> : <AuthNavigator />}
+    </NavigationContainer>
+  );
+};
+```
+
+### Screen Params
+
+Navigate with params:
+
+```javascript
+// Navigate to ProblemDetail
+navigation.navigate('ProblemDetail', {
+  problemId: problem._id,
+  slug: problem.slug
+});
+
+// Access params in screen
+const { problemId } = route.params;
+```
+
+---
+
+## Key Features
+
+### 1. Authentication
+
+- Register new account with class selection
+- Login with username/password
+- Secure token storage
+- Auto logout on token expiration
+
+**Files**: `LoginScreen.js`, `RegisterScreen.js`, `authService.js`
+
+### 2. Problem Solving
+
+- Browse problems with filters
+- View problem details and sample test cases
+- Submit code in multiple languages (Python, JavaScript, C++, Java)
+- View submission results and AI analysis
+
+**Files**: `ProblemsScreen.js`, `ProblemDetailScreen.js`, `SubmissionDetailScreen.js`
+
+### 3. Code Execution
+
+- Support for 4 programming languages
+- Real-time test case results
+- Error messages and explanations
+- AI-powered code analysis
+
+**Files**: `submissionService.js`, `TestCaseViewer.js`
+
+### 4. Contests
+
+- Browse upcoming, running, and past contests
+- Join contests and solve contest problems
+- View contest leaderboard
+- Track your performance
+
+**Files**: `ContestsScreen.js`, `ContestDetailScreen.js`
+
+### 5. Leaderboard
+
+- Global ranking system
+- Filter by rating or solved problems
+- Pagination support
+
+**Files**: `LeaderboardScreen.js`
+
+### 6. User Profile
+
+- View profile information
+- Track statistics (problems solved, submissions, rating)
+- View submission history
+- Edit profile settings
+
+**Files**: `ProfileScreen.js`, `MySubmissionsScreen.js`
+
+---
+
+## Development Guidelines
+
+### Code Style
+
+- Use functional components with hooks
+- Keep components small and focused
+- Use Redux for global state
+- Use local state (useState) for UI state
+
+### Naming Conventions
+
+```javascript
+// Screens: PascalCase + "Screen" suffix
+export const LoginScreen = () => { }
+
+// Components: PascalCase
+export const ProblemCard = () => { }
+
+// Services: camelCase + "Service" suffix
+export const problemService = { }
+
+// Functions: camelCase
+const fetchProblems = async () => { }
+
+// Constants: UPPER_SNAKE_CASE
+const LANGUAGES = ['python', 'javascript'];
+```
+
+### Error Handling
+
+```javascript
+try {
+  const result = await dispatch(action).unwrap();
+} catch (error) {
+  // Handle error
+  console.error('Error:', error);
+}
+```
+
+### Form Validation
+
+```javascript
+import { validateEmail, validatePassword } from '@utils/validation';
+
+const errors = {};
+if (!validateEmail(email)) errors.email = 'Invalid email';
+if (!validatePassword(password)) errors.password = 'Min 6 chars';
+
+if (Object.keys(errors).length > 0) {
+  setValidationErrors(errors);
+  return;
+}
+```
+
+### Styling
+
+- Use React Native StyleSheet for performance
+- Use consistent color scheme (#0891b2 for primary)
+- Responsive design with flexible layouts
+- Dark mode support (future)
+
+### Adding New Features
+
+1. **Create API service** (`src/services/`)
+2. **Create Redux slice** (`src/store/slices/`)
+3. **Create screen component** (`src/screens/`)
+4. **Add navigation** (`src/navigation/`)
+5. **Add reusable components** (`src/components/`)
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+**Port already in use:**
+```bash
+lsof -ti:8081 | xargs kill -9
+```
+
+**Cache issues:**
+```bash
+npm start -- --reset-cache
+```
+
+**Cannot connect to backend:**
+- Check backend is running on port 5000
+- Update API URL in `.env.local`
+- Use computer IP instead of localhost for device
+
+**Redux DevTools:**
+```bash
+# Install Redux DevTools extension for debugging
+npm install redux-devtools
+```
+
+---
+
+## Performance Optimization
+
+- ✅ Lazy loading of screens
+- ✅ Pagination for lists
+- ✅ Memoized components with React.memo
+- ✅ Efficient Redux selectors
+- ✅ Image optimization
+- ✅ Network request caching
+
+---
+
+## Future Enhancements
+
+- [ ] Offline mode support
+- [ ] Dark theme support
+- [ ] Push notifications
+- [ ] Direct messaging between users
+- [ ] Video tutorials
+- [ ] Code syntax highlighting in editor
+- [ ] Real-time collaboration
+
+---
+
+## Support
+
+For issues or questions:
+1. Check the [SETUP.md](./SETUP.md) guide
+2. Review code comments
+3. Check Redux state in Redux DevTools
+4. Check network requests in Expo debugger
+
+---
+
+**Happy Coding! 🚀**
