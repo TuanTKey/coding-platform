@@ -4,8 +4,9 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: cd backend && npm install
-    startCommand: cd backend && npm start
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: PORT
         value: 5000
@@ -25,8 +26,9 @@ services:
     env: node
     region: singapore
     plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    startCommand: cd frontend && npm run preview
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
     envVars:
       - key: VITE_API_URL
         value: https://coding-platform-backend.onrender.com
