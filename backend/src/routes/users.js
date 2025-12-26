@@ -6,6 +6,15 @@ const User = require('../models/User');
 
 // Public routes
 router.get('/leaderboard', userController.getLeaderboard);
+// Public: get all users (hide password)
+router.get('/', async (req, res) => {
+  try {
+    const users = await require('../models/User').find().select('-password');
+    res.json({ users });
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Authenticated routes
 // `/me` must be defined before `/:id` to avoid treating 'me' as an id param
