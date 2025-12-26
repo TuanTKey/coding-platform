@@ -172,7 +172,7 @@ const Register = () => {
                     className={`w-full pl-10 pr-4 py-3 rounded-xl transition-colors outline-none ${
                       isDark
                         ? "bg-transparent text-white placeholder-gray-500"
-                        : "bg-transparent text-gray-900 placeholder-gray-400"
+                        : "bg-transparent text-black placeholder-black"
                     }`}
                     required
                   />
@@ -210,7 +210,7 @@ const Register = () => {
                     className={`w-full pl-10 pr-4 py-3 rounded-xl transition-colors outline-none ${
                       isDark
                         ? "bg-transparent text-white placeholder-gray-500"
-                        : "bg-transparent text-gray-900 placeholder-gray-400"
+                        : "bg-transparent text-black placeholder-black"
                     }`}
                     required
                   />
@@ -248,7 +248,7 @@ const Register = () => {
                     className={`w-full pl-10 pr-4 py-3 rounded-xl transition-colors outline-none ${
                       isDark
                         ? "bg-transparent text-white placeholder-gray-500"
-                        : "bg-transparent text-gray-900 placeholder-gray-400"
+                        : "bg-transparent text-black placeholder-black"
                     }`}
                     required
                   />
@@ -278,7 +278,7 @@ const Register = () => {
                     className={`w-full pl-4 pr-4 py-3 rounded-xl transition-colors outline-none appearance-none cursor-pointer ${
                       isDark
                         ? "bg-slate-700/50 text-white placeholder-gray-500"
-                        : "bg-white text-gray-900 placeholder-gray-400"
+                        : "bg-white text-black placeholder-black"
                     }`}
                     required
                   >
@@ -323,7 +323,7 @@ const Register = () => {
                     className={`w-full pl-10 pr-12 py-3 rounded-xl transition-colors outline-none ${
                       isDark
                         ? "bg-transparent text-white placeholder-gray-500"
-                        : "bg-transparent text-gray-900 placeholder-gray-400"
+                        : "bg-transparent text-black placeholder-black"
                     }`}
                     required
                   />

@@ -145,9 +145,13 @@ exports.createProblem = async (req, res) => {
       createdBy: req.user.id
     });
 
-    // Create sample test cases
-    if (sampleTestCases && sampleTestCases.length > 0) {
-      const sampleTests = sampleTestCases.map(tc => ({
+    // Create test cases if provided (optional)
+    const totalTestCases = (sampleTestCases?.length || 0) + (hiddenTestCases?.length || 0);
+    
+    if (totalTestCases > 0) {
+      // Create sample test cases if provided
+      if (sampleTestCases && sampleTestCases.length > 0) {
+        const sampleTests = sampleTestCases.map(tc => ({
         problemId: problem._id,
         input: tc.input,
         expectedOutput: tc.expectedOutput,
@@ -156,7 +160,7 @@ exports.createProblem = async (req, res) => {
       await TestCase.insertMany(sampleTests);
     }
 
-    // Create hidden test cases
+    // Create hidden test cases if provided
     if (hiddenTestCases && hiddenTestCases.length > 0) {
       const hiddenTests = hiddenTestCases.map(tc => ({
         problemId: problem._id,
@@ -166,9 +170,12 @@ exports.createProblem = async (req, res) => {
       }));
       await TestCase.insertMany(hiddenTests);
     }
+    } // Close the if (totalTestCases > 0) block
 
     res.status(201).json({
-      message: 'Problem created successfully',
+      message: totalTestCases > 0 
+        ? 'Problem created successfully with test cases'
+        : 'Problem created successfully (test cases can be added later)',
       problem
     });
   } catch (error) {
@@ -245,9 +252,45 @@ exports.addTestCase = async (req, res) => {
       isHidden
     });
 
+    console.log('✅ Test case added successfully');
+
+    // Trigger re-judge for pending submissions
+    console.log('🔄 Checking for pending submissions to re-judge...');
+    const judgeService = require('../services/judgeService');
+    const Problem = require('../models/Problem');
+    const Submission = require('../models/Submission');
+    const TestCase = require('../models/TestCase');
+
+    const problem = await Problem.findById(req.params.id);
+    const pendingSubmissions = await Submission.find({
+      problemId: req.params.id,
+      status: 'pending'
+    });
+
+    console.log(`📝 Found ${pendingSubmissions.length} pending submissions to re-judge`);
+
+    // Re-judge each pending submission
+    for (const submission of pendingSubmissions) {
+      try {
+        const testCases = await TestCase.find({ problemId: req.params.id });
+        console.log(`🔄 Re-judging submission ${submission._id}...`);
+        
+        judgeService.judgeSubmission(
+          submission._id,
+          problem,
+          testCases,
+          submission.code,
+          submission.language
+        );
+      } catch (judgeError) {
+        console.error(`❌ Error re-judging submission ${submission._id}:`, judgeError);
+      }
+    }
+
     res.status(201).json({
       message: 'Test case added successfully',
-      testCase
+      testCase,
+      pendingSubmissionsReJudged: pendingSubmissions.length
     });
   } catch (error) {
     console.error('Add test case error:', error);

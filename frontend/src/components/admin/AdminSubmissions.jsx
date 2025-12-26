@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../services/api";
+import { useAuth } from "./AuthContext";
 import {
   Eye,
   Filter,
@@ -20,6 +21,7 @@ import { useTheme } from "../../contexts/ThemeContext";
 
 const AdminSubmissions = () => {
   const { isDark } = useTheme();
+  const { user } = useAuth();
   const [submissions, setSubmissions] = useState([]);
   const [filteredSubmissions, setFilteredSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,12 +46,18 @@ const AdminSubmissions = () => {
   const fetchSubmissions = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/submissions/admin/all?limit=200");
-      // Chỉ lấy bài nộp thành công
-      const successfulSubmissions = (response.data.submissions || []).filter(
-        (sub) => sub.status === "accepted"
-      );
-      setSubmissions(successfulSubmissions);
+      let response;
+      
+      // If user is teacher, use /my endpoint instead of admin
+      if (user?.role === 'teacher') {
+        response = await api.get("/submissions/my?limit=200");
+      } else {
+        response = await api.get("/submissions/admin/all?limit=200");
+      }
+      
+      // Lấy tất cả bài nộp (không filter theo status)
+      const allSubmissions = response.data.submissions || [];
+      setSubmissions(allSubmissions);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       alert("Failed to load submissions");

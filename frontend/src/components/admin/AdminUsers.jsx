@@ -68,7 +68,7 @@ const CreateUserForm = ({ onCreated }) => {
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         placeholder="Tên đăng nhập"
-        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm"
+        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm text-black placeholder-black"
         required
       />
       <input
@@ -77,7 +77,7 @@ const CreateUserForm = ({ onCreated }) => {
         value={fullName}
         onChange={(e) => setFullName(e.target.value)}
         placeholder="Họ và tên"
-        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm"
+        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm text-black placeholder-black"
       />
       <input
         name="create-email"
@@ -85,7 +85,7 @@ const CreateUserForm = ({ onCreated }) => {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Email"
-        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm"
+        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm text-black placeholder-black"
         type="email"
         required
       />
@@ -95,7 +95,7 @@ const CreateUserForm = ({ onCreated }) => {
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         placeholder="Mật khẩu"
-        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm"
+        className="col-span-12 md:col-span-3 p-2 border rounded-md text-sm text-black placeholder-black"
         type="password"
         required
       />
@@ -104,7 +104,7 @@ const CreateUserForm = ({ onCreated }) => {
       <select
         value={role}
         onChange={(e) => setRole(e.target.value)}
-        className="col-span-12 md:col-span-2 p-2 border rounded-md text-sm"
+        className="col-span-12 md:col-span-2 p-2 border rounded-md text-sm text-black"
       >
         <option value="user">Học sinh</option>
         <option value="teacher">Giáo viên</option>
@@ -117,7 +117,7 @@ const CreateUserForm = ({ onCreated }) => {
             value={teacherClasses}
             onChange={(e) => setTeacherClasses(e.target.value)}
             placeholder="Các lớp (ví dụ: 10A1,10A2)"
-            className="w-full p-2 border rounded-md text-sm"
+            className="w-full p-2 border rounded-md text-sm text-black placeholder-black"
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -125,13 +125,13 @@ const CreateUserForm = ({ onCreated }) => {
               value={className}
               onChange={(e) => setClassName(e.target.value)}
               placeholder="Lớp (ví dụ: 10A1)"
-              className="w-full p-2 border rounded-md text-sm"
+              className="w-full p-2 border rounded-md text-sm text-black placeholder-black"
             />
             <input
               value={"(auto)"}
               readOnly
               placeholder="Mã số sinh viên (tự động)"
-              className="w-full p-2 border rounded-md text-sm bg-gray-50"
+              className="w-full p-2 border rounded-md text-sm bg-gray-50 text-black placeholder-black"
             />
           </div>
         )}

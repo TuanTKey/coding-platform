@@ -22,7 +22,7 @@ const problemSchema = new mongoose.Schema({
   },
   timeLimit: {
     type: Number,
-    default: 2000 // milliseconds
+    default: 1800000 // milliseconds (30 minutes)
   },
   memoryLimit: {
     type: Number,

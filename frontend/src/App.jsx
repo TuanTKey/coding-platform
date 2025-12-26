@@ -39,11 +39,13 @@ import ContestLeaderboard from "./components/admin/ContestLeaderboard";
 // Teacher
 import TeacherRoute from "./components/teacher/TeacherRoute";
 import TeacherDashboard from "./pages/TeacherDashboard";
-import TeacherAdminDashboard from "./components/teacher/TeacherAdminDashboard";
 import TeacherStudents from "./pages/TeacherStudents";
 import TeacherClasses from "./pages/TeacherClasses";
+import TeacherSubmissions from "./components/teacher/TeacherSubmissions";
+import TeacherGradesBoard from "./components/teacher/TeacherGradesBoard";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import ScoresBoard from "./components/student/ScoresBoard";
 
 // THÊM TRANG QUẢN LÝ LỚP HỌC
 import AdminClasses from "./components/admin/AdminClasses";
@@ -75,7 +77,6 @@ function AppRoutes() {
     }
     if (!user) return <Home />;
     if (user.role === "admin") return <Navigate to="/admin" replace />;
-    if (user.role === "teacher") return <Navigate to="/teacher" replace />;
     return <Home />;
   };
   return (
@@ -260,14 +261,6 @@ function AppRoutes() {
             }
           />
           <Route
-            path="/teacher/admin"
-            element={
-              <TeacherRoute>
-                <TeacherAdminDashboard />
-              </TeacherRoute>
-            }
-          />
-          <Route
             path="/teacher/classes"
             element={
               <TeacherRoute>
@@ -280,6 +273,22 @@ function AppRoutes() {
             element={
               <TeacherRoute>
                 <TeacherStudents />
+              </TeacherRoute>
+            }
+          />
+          <Route
+            path="/teacher/submissions"
+            element={
+              <TeacherRoute>
+                <TeacherSubmissions />
+              </TeacherRoute>
+            }
+          />
+          <Route
+            path="/teacher/grades"
+            element={
+              <TeacherRoute>
+                <TeacherGradesBoard />
               </TeacherRoute>
             }
           />
@@ -297,6 +306,14 @@ function AppRoutes() {
             element={
               <ProtectedRoute>
                 <EditProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/scores"
+            element={
+              <ProtectedRoute>
+                <ScoresBoard />
               </ProtectedRoute>
             }
           />

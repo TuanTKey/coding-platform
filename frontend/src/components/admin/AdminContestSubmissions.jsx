@@ -53,11 +53,9 @@ const AdminContestSubmissions = () => {
     try {
       setLoading(true);
       const response = await api.get("/submissions/admin/all?limit=500");
-      // Chỉ lấy bài nộp thuộc CONTEST (bài thi)
-      const contestSubmissions = (response.data.submissions || []).filter(
-        (sub) => sub.status === "accepted" && sub.contestId
-      );
-      setSubmissions(contestSubmissions);
+      // Lấy tất cả bài nộp (contest + độc lập)
+      const allSubmissions = response.data.submissions || [];
+      setSubmissions(allSubmissions);
     } catch (error) {
       console.error("Error fetching submissions:", error);
       alert("Failed to load submissions");
@@ -106,14 +104,16 @@ const AdminContestSubmissions = () => {
     const grouped = {};
 
     submissions.forEach((sub) => {
-      const key = `${sub.userId?._id}_${sub.contestId?._id || sub.contestId}`;
+      // Cho submissions độc lập, dùng "independent" làm contestId
+      const contestIdValue = sub.contestId?._id || sub.contestId || "independent";
+      const key = `${sub.userId?._id}_${contestIdValue}`;
 
       if (!grouped[key]) {
         grouped[key] = {
           key,
           user: sub.userId,
-          contest: sub.contestId,
-          contestId: sub.contestId?._id || sub.contestId,
+          contest: sub.contestId || { title: "Bài tập độc lập" },
+          contestId: contestIdValue,
           problems: [],
           submissions: [],
           totalScore: 0,
@@ -125,7 +125,10 @@ const AdminContestSubmissions = () => {
       const problemId = sub.problemId?._id || sub.problemId;
       if (!grouped[key].problems.find((p) => (p._id || p) === problemId)) {
         grouped[key].problems.push(sub.problemId);
-        grouped[key].totalScore += 100; // 100 điểm mỗi bài
+        // Chỉ tính điểm nếu accepted
+        if (sub.status === 'accepted') {
+          grouped[key].totalScore += 100; // 100 điểm mỗi bài
+        }
       }
 
       grouped[key].submissions.push(sub);

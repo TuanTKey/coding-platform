@@ -226,6 +226,16 @@ const Navbar = () => {
                         >
                           Hồ sơ cá nhân
                         </Link>
+                        <Link
+                          to="/scores"
+                          className={`block px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                            isDark
+                              ? "text-gray-300 hover:bg-slate-700/40 hover:text-cyan-400"
+                              : "text-gray-700 hover:bg-slate-100/50 hover:text-cyan-600"
+                          }`}
+                        >
+                          Bảng Điểm
+                        </Link>
                         <button
                           onClick={() => {
                             handleLogout();

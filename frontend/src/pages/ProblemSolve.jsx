@@ -247,7 +247,7 @@ const ProblemSolve = () => {
     setSubmitting(true);
     setOutputData({
       type: "judging",
-      message: "Judging...",
+      message: "📤 Đang nộp bài...",
     });
     setResult(null);
 
@@ -263,73 +263,58 @@ const ProblemSolve = () => {
         submitData.contestId = contestId;
       }
 
+      console.log("📤 Submitting with data:", submitData);
+      console.log("problemId:", problem._id);
+      console.log("code length:", code.length);
+      console.log("language:", language);
+
       const response = await api.post("/submissions", submitData);
 
-      const submissionId = response.data.submissionId;
-      let pollCount = 0;
+      // ✅ Nộp thành công
+      setSubmitting(false);
+      
+      // Hiển thị thông báo với countdown
+      let countdown = 3;
+      const isUpdate = response.data.isUpdate;
+      const message = isUpdate 
+        ? `Cập nhập bài tập thành công! Đang chuyển hướng trong ${countdown} giây...`
+        : `Bài tập đã được nộp thành công! Đang chuyển hướng trong ${countdown} giây...`;
+      
+      setOutputData({
+        type: "success",
+        title: isUpdate ? "✅ Cập nhập thành công!" : "✅ Nộp bài thành công!",
+        message: message,
+      });
 
-      const pollInterval = setInterval(async () => {
-        try {
-          pollCount++;
-          const statusResponse = await api.get(`/submissions/${submissionId}`);
-          const submission = statusResponse.data.submission;
-
-          if (
-            submission.status !== "pending" &&
-            submission.status !== "judging"
-          ) {
-            setResult(submission);
-            setSubmitting(false);
-
-            setOutputData({
-              type: submission.status === "accepted" ? "accepted" : "wrong",
-              status: submission.status,
-              testCasesPassed: submission.testCasesPassed,
-              totalTestCases: submission.totalTestCases,
-              executionTime: submission.executionTime,
-              memoryUsed: submission.memoryUsed,
-              errorMessage: submission.errorMessage,
-            });
-
-            clearInterval(pollInterval);
-
-            // Nếu đang trong contest và bài được Accepted, quay lại trang contest sau 2 giây
-            if (contestId && submission.status === "accepted") {
-              setOutputData((prev) => ({
-                ...prev,
-                redirecting: true,
-                redirectMessage: "Đang chuyển về trang cuộc thi...",
-              }));
-              setTimeout(() => {
-                navigate(`/contests/${contestId}`);
-              }, 2000);
-            }
-          }
-
-          if (pollCount >= 30) {
-            clearInterval(pollInterval);
-            setSubmitting(false);
-            setOutputData({
-              type: "error",
-              title: "Timeout",
-              message: "Judging timed out. Please try again.",
-            });
-          }
-        } catch (error) {
-          clearInterval(pollInterval);
-          setSubmitting(false);
-          setOutputData({
-            type: "error",
-            title: "Error",
-            message: "Error checking submission status",
-          });
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          const newMessage = isUpdate 
+            ? `Cập nhập bài tập thành công! Đang chuyển hướng trong ${countdown} giây...`
+            : `Bài tập đã được nộp thành công! Đang chuyển hướng trong ${countdown} giây...`;
+          setOutputData((prev) => ({
+            ...prev,
+            message: newMessage,
+          }));
+        } else {
+          clearInterval(countdownInterval);
         }
       }, 1000);
+
+      // ⏱️ Chờ 3 giây rồi redirect
+      setTimeout(() => {
+        if (contestId) {
+          navigate(`/contests/${contestId}`);
+        } else {
+          navigate("/problems");
+        }
+      }, 3000);
+
     } catch (error) {
       setSubmitting(false);
       setOutputData({
         type: "error",
-        title: "Submission Failed",
+        title: "❌ Lỗi nộp bài",
         message: error.response?.data?.error || "Failed to submit",
       });
     }
@@ -461,7 +446,7 @@ const ProblemSolve = () => {
       <div className="flex-1 flex overflow-hidden">
         {/* Problem Description */}
         <div
-          className={`w-1/2 overflow-y-auto ${
+          className={`w-1/3 overflow-y-auto ${
             isDark ? "border-slate-700" : "border-slate-200"
           } border-r`}
         >
@@ -585,7 +570,7 @@ const ProblemSolve = () => {
         </div>
 
         {/* Code Editor Panel */}
-        <div className="w-1/2 flex flex-col">
+        <div className="w-2/3 flex flex-col">
           {/* Editor Toolbar */}
           <div
             className={`flex items-center justify-between ${

@@ -66,6 +66,7 @@ const userSchema = new mongoose.Schema({
       '10A1', '10A2', '10A3', '10A4', '10A5',
       '11A1', '11A2', '11A3', '11A4', '11A5', 
       '12A1', '12A2', '12A3', '12A4', '12A5',
+      'ST22A', 'ST22B', 'ST22C', 'ST22D', 'ST22E', 'ST22F',
       'ADMIN', 'TEACHER','NONE'
     ]
   },
@@ -75,7 +76,8 @@ const userSchema = new mongoose.Schema({
     enum: [
       '10A1', '10A2', '10A3', '10A4', '10A5',
       '11A1', '11A2', '11A3', '11A4', '11A5', 
-      '12A1', '12A2', '12A3', '12A4', '12A5'
+      '12A1', '12A2', '12A3', '12A4', '12A5',
+      'ST22A', 'ST22B', 'ST22C', 'ST22D', 'ST22E', 'ST22F'
     ]
   }],
   // Giữ lại field cũ từ code của bạn

@@ -26,6 +26,7 @@ const submissionSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: [
+      'submitted',  // Chỉ lưu, không judge
       'pending', 
       'judging', 
       'accepted', 
@@ -35,7 +36,7 @@ const submissionSchema = new mongoose.Schema({
       'runtime_error', 
       'compile_error'
     ],
-    default: 'pending'
+    default: 'submitted'
   },
   executionTime: {
     type: Number // ms
@@ -78,6 +79,23 @@ const submissionSchema = new mongoose.Schema({
     }
   ],
   // Manual override by teacher/admin
+  score: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: null
+  },
+  scoreNote: {
+    type: String,
+    default: null
+  },
+  scoredBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  scoredAt: {
+    type: Date
+  },
   manualScore: {
     type: Number,
     default: null

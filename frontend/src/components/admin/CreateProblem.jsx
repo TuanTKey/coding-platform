@@ -65,6 +65,7 @@ const CreateProblem = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     setLoading(true);
 
     try {
@@ -85,11 +86,11 @@ const CreateProblem = () => {
       };
 
       await api.post("/problems", payload);
-      alert("Problem created successfully!");
+      alert("✅ Bài toán được tạo thành công!");
       navigate("/admin/problems");
     } catch (error) {
       console.error("Error creating problem:", error);
-      alert(error.response?.data?.error || "Failed to create problem");
+      alert(error.response?.data?.error || "❌ Lỗi: Không thể tạo bài toán");
     } finally {
       setLoading(false);
     }

@@ -8,8 +8,11 @@ exports.submitSolution = async (req, res) => {
   try {
     const { problemId, code, language, contestId } = req.body;
 
+    console.log('📝 Submit request - problemId:', problemId, 'language:', language, 'codeLength:', code?.length);
+
     // Validate
     if (!problemId || !code || !language) {
+      console.error('❌ Validation failed:', { problemId: !!problemId, code: !!code, language: !!language });
       return res.status(400).json({ 
         error: 'Problem ID, code and language are required' 
       });
@@ -18,25 +21,57 @@ exports.submitSolution = async (req, res) => {
     // Check if problem exists
     const problem = await Problem.findById(problemId);
     if (!problem) {
+      console.error('❌ Problem not found:', problemId);
       return res.status(404).json({ error: 'Problem not found' });
     }
 
+    console.log('⏱️  Problem timeLimit:', problem.timeLimit, 'ms');
+
     // Get all test cases for this problem
     const testCases = await TestCase.find({ problemId });
+    console.log('📊 Found test cases:', testCases.length);
 
+    // If no test cases, submission will be pending - teacher can add test cases later
     if (testCases.length === 0) {
-      return res.status(400).json({ 
-        error: 'No test cases available for this problem' 
+      console.log('⚠️  No test cases for problem (sẽ được chấm khi có test cases)');
+    }
+
+    // Check if student already has a submission for this problem
+    let existingSubmission = await Submission.findOne({
+      userId: req.user.id,
+      problemId: problemId
+    });
+
+    if (existingSubmission) {
+      // Update existing submission - only update code and reset scoring
+      console.log('🔄 Updating existing submission:', existingSubmission._id);
+      existingSubmission.code = code;
+      existingSubmission.language = language;
+      existingSubmission.status = 'submitted';  // Reset to submitted
+      existingSubmission.score = null;  // Reset score
+      existingSubmission.scoreNote = null;
+      existingSubmission.scoredBy = null;
+      existingSubmission.scoredAt = null;
+      existingSubmission.totalTestCases = testCases.length;
+      
+      await existingSubmission.save();
+
+      return res.status(200).json({
+        message: '✅ Bài tập đã cập nhập thành công!',
+        submissionId: existingSubmission._id,
+        status: 'submitted',
+        testCasesResult: [],
+        isUpdate: true
       });
     }
 
-    // Create submission
+    // Create new submission if no existing one
     const submissionData = {
       userId: req.user.id,
       problemId,
       code,
       language,
-      status: 'pending',
+      status: 'submitted',  // Chỉ lưu, không judge
       totalTestCases: testCases.length
     };
     
@@ -47,14 +82,15 @@ exports.submitSolution = async (req, res) => {
     
     const submission = await Submission.create(submissionData);
 
-    // Run judge asynchronously
-    judgeService.judgeSubmission(submission._id, problem, testCases, code, language);
+    // ❌ Không judge, chỉ lưu submission
+    // judgeService.judgeSubmission(submission._id, problem, testCases, code, language);
 
     res.status(201).json({
-      message: 'Submission received',
+      message: '✅ Bài tập đã nộp thành công!',
       submissionId: submission._id,
-      status: 'pending',
-      testCasesResult: submission.testCasesResult || []
+      status: 'submitted',
+      testCasesResult: [],
+      isUpdate: false
     });
   } catch (error) {
     console.error('Submit solution error:', error);
@@ -67,14 +103,27 @@ exports.getSubmissionStatus = async (req, res) => {
   try {
     const submission = await Submission.findById(req.params.id)
       .populate('problemId', 'title slug')
-      .populate('userId', 'username');
+      .populate('userId', 'username fullName email class');
 
     if (!submission) {
       return res.status(404).json({ error: 'Submission not found' });
     }
 
-    // Check if user owns this submission or is admin
-    if (submission.userId._id.toString() !== req.user.id && req.user.role !== 'admin') {
+    // Check access: owner, admin, or teacher of the student
+    const isOwner = submission.userId._id.toString() === req.user.id;
+    const isAdmin = req.user.role === 'admin';
+    let isTeacher = false;
+
+    if (req.user.role === 'teacher') {
+      // Check if student's class is in teacher's classes
+      const User = require('../models/User');
+      const teacher = await User.findById(req.user.id).lean();
+      const studentClass = submission.userId.class;
+      const teacherClasses = teacher?.teacherClasses || [];
+      isTeacher = teacherClasses.includes(studentClass);
+    }
+
+    if (!isOwner && !isAdmin && !isTeacher) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -322,5 +371,429 @@ exports.runCode = async (req, res) => {
   } catch (error) {
     console.error('Run code error:', error);
     res.status(500).json({ error: 'Failed to run code: ' + error.message });
+  }
+};
+
+// Get teacher statistics for their classes
+exports.getTeacherStats = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const Class = require('../models/Class');
+    const mongoose = require('mongoose');
+    
+    const teacherId = req.user.id;
+    const teacher = await User.findById(teacherId);
+    
+    if (!teacher || teacher.role !== 'teacher') {
+      return res.status(403).json({ error: 'Only teachers can access this' });
+    }
+
+    const teacherClasses = teacher.teacherClasses || [];
+    
+    // Get all students in teacher's classes
+    const classNames = [];
+    for (const classItem of teacherClasses) {
+      let cls = null;
+      
+      // Check if classItem is a valid ObjectId
+      if (mongoose.Types.ObjectId.isValid(classItem)) {
+        cls = await Class.findById(classItem).lean();
+      } else {
+        // classItem is a class name string
+        classNames.push(classItem);
+        continue;
+      }
+      
+      if (cls) classNames.push(cls.name);
+    }
+
+    // Get all students in these classes
+    const students = await User.find({ 
+      class: { $in: classNames },
+      role: 'user'
+    }).lean();
+    const studentIds = students.map(s => s._id);
+
+    // Get submissions for these students
+    const submissions = await Submission.find({ 
+      userId: { $in: studentIds } 
+    }).populate('problemId', 'title slug').lean();
+
+    // Calculate statistics
+    const totalSubmissions = submissions.length;
+    const acceptedCount = submissions.filter(s => s.status === 'accepted').length;
+    const rejectedCount = submissions.filter(s => s.status === 'wrong_answer' || s.status === 'runtime_error' || s.status === 'time_limit_exceeded').length;
+    const pendingCount = submissions.filter(s => s.status === 'pending' || s.status === 'judging').length;
+
+    // Per-problem statistics
+    const problemStats = {};
+    for (const submission of submissions) {
+      const problemId = submission.problemId._id.toString();
+      if (!problemStats[problemId]) {
+        problemStats[problemId] = {
+          problemId,
+          problemTitle: submission.problemId?.title || 'Unknown',
+          totalSubmissions: 0,
+          accepted: 0,
+          rejected: 0,
+          submitCount: {}
+        };
+      }
+      problemStats[problemId].totalSubmissions++;
+      if (submission.status === 'accepted') {
+        problemStats[problemId].accepted++;
+      } else if (submission.status !== 'pending' && submission.status !== 'judging') {
+        problemStats[problemId].rejected++;
+      }
+      
+      // Count submissions per user
+      const userId = submission.userId.toString();
+      if (!problemStats[problemId].submitCount[userId]) {
+        problemStats[problemId].submitCount[userId] = 0;
+      }
+      problemStats[problemId].submitCount[userId]++;
+    }
+
+    // Student performance
+    const studentStats = {};
+    for (const student of students) {
+      const studentId = student._id.toString();
+      const studentSubmissions = submissions.filter(s => s.userId.toString() === studentId);
+      const accepted = studentSubmissions.filter(s => s.status === 'accepted').length;
+      
+      studentStats[studentId] = {
+        studentId,
+        username: student.username,
+        studentIdField: student.studentId,
+        totalSubmissions: studentSubmissions.length,
+        acceptedCount: accepted,
+        rating: student.rating || 0
+      };
+    }
+
+    // Daily submission trend (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    
+    const dailyTrend = {};
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      dailyTrend[dateStr] = { date: dateStr, count: 0, accepted: 0 };
+    }
+
+    for (const submission of submissions) {
+      const dateStr = submission.createdAt.toISOString().split('T')[0];
+      if (dailyTrend[dateStr]) {
+        dailyTrend[dateStr].count++;
+        if (submission.status === 'accepted') {
+          dailyTrend[dateStr].accepted++;
+        }
+      }
+    }
+
+    res.json({
+      summary: {
+        totalStudents: students.length,
+        totalSubmissions,
+        acceptedCount,
+        rejectedCount,
+        pendingCount,
+        acRate: totalSubmissions > 0 ? ((acceptedCount / totalSubmissions) * 100).toFixed(2) : 0
+      },
+      problemStats: Object.values(problemStats),
+      studentStats: Object.values(studentStats).sort((a, b) => b.acceptedCount - a.acceptedCount),
+      dailyTrend: Object.values(dailyTrend),
+      classes: classNames
+    });
+
+  } catch (error) {
+    console.error('Get teacher stats error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+};
+
+// Get submissions from students in teacher's classes
+exports.getTeacherClassSubmissions = async (req, res) => {
+  try {
+    const { limit = 200 } = req.query;
+    const teacherId = req.user.id;
+    const User = require('../models/User');
+
+    // Get teacher info
+    const teacher = await User.findById(teacherId).lean();
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    if (teacher.role !== 'teacher' && teacher.role !== 'admin') {
+      return res.status(403).json({ error: 'Only teachers and admins' });
+    }
+
+    // Get teacher's classes
+    const teacherClasses = teacher.teacherClasses || [];
+    const objectIds = teacherClasses.filter(tc => /^[0-9a-fA-F]{24}$/.test(tc));
+    const names = teacherClasses.filter(tc => !(/^[0-9a-fA-F]{24}$/.test(tc)));
+    
+    const classQuery = { $or: [] };
+    if (objectIds.length) classQuery.$or.push({ _id: { $in: objectIds } });
+    if (names.length) classQuery.$or.push({ name: { $in: names } });
+
+    const Class = require('../models/Class');
+    const classes = classQuery.$or.length 
+      ? await Class.find(classQuery).select('name').lean()
+      : [];
+    
+    const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
+
+    // Get students in these classes
+    const students = await User.find({ class: { $in: classNames } }).select('_id').lean();
+    const studentIds = students.map(s => s._id);
+
+    // Get all submissions from these students
+    const submissions = await Submission.find({ userId: { $in: studentIds } })
+      .populate('userId', 'username fullName email class studentId')
+      .populate('problemId', 'title slug description')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
+
+    res.json({ submissions });
+  } catch (error) {
+    console.error('Get teacher class submissions error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Judge a submission (teacher/admin can judge student submissions)
+exports.judgeSubmission = async (req, res) => {
+  try {
+    const submissionId = req.params.id;
+    const { score, scoreNote } = req.body;
+
+    // Validate score
+    if (score === undefined || score === null) {
+      return res.status(400).json({ error: 'Score is required (0-100)' });
+    }
+
+    if (score < 0 || score > 100) {
+      return res.status(400).json({ error: 'Score must be between 0 and 100' });
+    }
+
+    const submission = await Submission.findById(submissionId)
+      .populate('problemId')
+      .populate('userId', 'class');
+
+    if (!submission) {
+      return res.status(404).json({ error: 'Submission not found' });
+    }
+
+    // Check access: admin or teacher of the student
+    let hasAccess = req.user.role === 'admin';
+    
+    if (!hasAccess && req.user.role === 'teacher') {
+      const User = require('../models/User');
+      const teacher = await User.findById(req.user.id).lean();
+      const studentClass = submission.userId.class;
+      const teacherClasses = teacher?.teacherClasses || [];
+      hasAccess = teacherClasses.includes(studentClass);
+    }
+
+    if (!hasAccess) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // Update submission with teacher's manual score
+    submission.score = score;
+    submission.scoreNote = scoreNote || null;
+    submission.scoredBy = req.user.id;
+    submission.scoredAt = new Date();
+    
+    // Update status based on score
+    if (score === 0) {
+      submission.status = 'wrong_answer';
+    } else if (score >= 100) {
+      submission.status = 'accepted';
+    } else {
+      submission.status = 'accepted'; // Partial score - still accepted
+    }
+
+    await submission.save();
+
+    // Get updated submission
+    const updatedSubmission = await Submission.findById(submissionId)
+      .populate('problemId', 'title slug')
+      .populate('userId', 'username fullName')
+      .populate('scoredBy', 'username');
+
+    console.log('✅ Submission scored:', {
+      submissionId,
+      score,
+      scoredBy: req.user.id,
+      status: submission.status
+    });
+
+    res.json({
+      message: 'Submission scored successfully',
+      submission: updatedSubmission
+    });
+  } catch (error) {
+    console.error('Judge submission error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+};
+
+// Get my scores (for students)
+exports.getMyScores = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Get all submissions with scores for this user
+    const submissions = await Submission.find({ 
+      userId: userId,
+      score: { $ne: null }  // Only submissions that have been scored
+    })
+      .populate('problemId', 'title slug difficulty')
+      .sort({ scoredAt: -1 })
+      .lean();
+
+    // Calculate statistics
+    const totalSubmissions = submissions.length;
+    const totalScore = submissions.reduce((sum, sub) => sum + (sub.score || 0), 0);
+    const averageScore = totalSubmissions > 0 ? (totalScore / totalSubmissions).toFixed(2) : 0;
+    const perfectScores = submissions.filter(s => s.score === 100).length;
+
+    res.json({
+      scores: submissions,
+      statistics: {
+        totalSubmissions,
+        totalScore,
+        averageScore,
+        perfectScores
+      }
+    });
+  } catch (error) {
+    console.error('Get my scores error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Get grades board for teacher (all students + all problems)
+exports.getTeacherGradesBoard = async (req, res) => {
+  try {
+    const teacherId = req.user.id;
+    const User = require('../models/User');
+    const Problem = require('../models/Problem');
+
+    // Get teacher info
+    const teacher = await User.findById(teacherId).lean();
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher not found' });
+    }
+
+    if (teacher.role !== 'teacher' && teacher.role !== 'admin') {
+      return res.status(403).json({ error: 'Only teachers and admins' });
+    }
+
+    // Get teacher's classes
+    const teacherClasses = teacher.teacherClasses || [];
+    const objectIds = teacherClasses.filter(tc => /^[0-9a-fA-F]{24}$/.test(tc));
+    const names = teacherClasses.filter(tc => !(/^[0-9a-fA-F]{24}$/.test(tc)));
+    
+    const classQuery = { $or: [] };
+    if (objectIds.length) classQuery.$or.push({ _id: { $in: objectIds } });
+    if (names.length) classQuery.$or.push({ name: { $in: names } });
+
+    const Class = require('../models/Class');
+    const classes = classQuery.$or.length 
+      ? await Class.find(classQuery).select('name').lean()
+      : [];
+    
+    // Combine class names - use Set to avoid duplicates
+    const classNamesSet = new Set([
+      ...classes.map(c => c.name),
+      ...names
+    ]);
+    const classNames = Array.from(classNamesSet);
+
+    // Get all students in these classes
+    const students = await User.find({ class: { $in: classNames }, role: 'user' })
+      .select('_id username fullName email class studentId')
+      .sort({ class: 1, fullName: 1 })
+      .lean();
+
+    // Get all problems
+    const problems = await Problem.find()
+      .select('_id title slug difficulty')
+      .sort({ createdAt: 1 })
+      .lean();
+
+    // Get all submissions for these students
+    const studentIds = students.map(s => s._id);
+    const submissions = await Submission.find({ userId: { $in: studentIds } })
+      .select('userId problemId score scoreNote scoredAt')
+      .lean();
+
+    // Build grades matrix: student -> problem -> score
+    const gradesMatrix = {};
+    
+    students.forEach(student => {
+      gradesMatrix[student._id] = {
+        student,
+        scores: {}
+      };
+      
+      problems.forEach(problem => {
+        gradesMatrix[student._id].scores[problem._id] = null;
+      });
+    });
+
+    // Fill in the grades
+    submissions.forEach(submission => {
+      const studentId = submission.userId.toString();
+      const problemId = submission.problemId.toString();
+      
+      if (gradesMatrix[studentId] && gradesMatrix[studentId].scores[problemId] !== undefined) {
+        gradesMatrix[studentId].scores[problemId] = {
+          score: submission.score,
+          scoreNote: submission.scoreNote,
+          scoredAt: submission.scoredAt
+        };
+      }
+    });
+
+    // Calculate student stats
+    const gradedData = Object.values(gradesMatrix).map(item => {
+      const scores = Object.values(item.scores).filter(s => s !== null);
+      const totalScore = scores.reduce((sum, s) => sum + (s.score || 0), 0);
+      const averageScore = scores.length > 0 ? (totalScore / scores.length).toFixed(2) : 0;
+      const perfectScores = scores.filter(s => s.score === 100).length;
+
+      return {
+        student: item.student,
+        scores: item.scores,
+        stats: {
+          totalSubmitted: scores.length,
+          totalScore,
+          averageScore,
+          perfectScores
+        }
+      };
+    });
+
+    res.json({
+      students: gradedData,
+      problems,
+      classes: classNames,
+      summary: {
+        totalStudents: students.length,
+        totalProblems: problems.length,
+        totalClasses: classNames.length
+      }
+    });
+  } catch (error) {
+    console.error('Get teacher grades board error:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
   }
 };

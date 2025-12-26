@@ -109,35 +109,85 @@ router.get('/', authenticate, isAdmin, async (req, res) => {
       ];
     }
 
-    // Nếu không có class documents, fallback lấy từ users
+    // Lấy danh sách Class documents
     const classes = await Class.find(match).sort({ name: 1 }).skip(Number(skip)).limit(Number(limit)).lean();
 
     let classNames = classes.map(c => c.name);
+    
+    // Nếu không có class documents, fallback lấy từ users
     if (classNames.length === 0) {
       const usersClasses = await User.distinct('class');
-      classNames = (usersClasses || []).filter(c => c).map(c => c.toUpperCase());
+      classNames = (usersClasses || []).filter(c => c && c.trim()).map(c => c.trim().toUpperCase());
+    } else {
+      // Normalize classNames từ documents (uppercase)
+      classNames = classNames.map(c => c.trim().toUpperCase());
     }
 
-    // Aggregation lấy stats trên Submission
-    const statsAgg = await Submission.aggregate([
-      { $match: { 'userId.class': { $in: classNames } } },
-      { $group: {
-          _id: '$userId.class',
-          totalSubmissions: { $sum: 1 },
-          acceptedSubmissions: { $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] } },
-          uniqueStudents: { $addToSet: '$userId' },
-          solvedProblemsSet: { $addToSet: '$problemId' }
-      }},
-      { $project: {
-          totalSubmissions: 1,
-          acceptedSubmissions: 1,
-          uniqueStudents: { $size: '$uniqueStudents' },
-          solvedProblems: { $size: '$solvedProblemsSet' }
-      }}
-    ]);
-
+    // Tính stats cho mỗi lớp từ User và Submission
     const statsByClass = {};
-    statsAgg.forEach(s => { statsByClass[s._id] = s; });
+    
+    for (const className of classNames) {
+      // Lấy số lượng học sinh trong lớp - match case-insensitive
+      const studentCount = await User.countDocuments({ 
+        class: { $regex: '^' + className + '$', $options: 'i' }
+      });
+      
+      // Lấy stats từ Submission
+      const submissionStats = await Submission.aggregate([
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'userId',
+            foreignField: '_id',
+            as: 'userInfo'
+          }
+        },
+        {
+          $unwind: {
+            path: '$userInfo',
+            preserveNullAndEmptyArrays: true
+          }
+        },
+        { 
+          $match: { 
+            'userInfo.class': { $regex: '^' + className + '$', $options: 'i' }
+          } 
+        },
+        { $group: {
+            _id: null,
+            totalSubmissions: { $sum: 1 },
+            acceptedSubmissions: { $sum: { $cond: [{ $eq: ['$status', 'accepted'] }, 1, 0] } },
+            uniqueStudents: { $addToSet: '$userId' },
+            solvedProblemsSet: { $addToSet: '$problemId' }
+        }},
+        { $project: {
+            totalSubmissions: 1,
+            acceptedSubmissions: 1,
+            uniqueStudents: { $size: '$uniqueStudents' },
+            solvedProblems: { $size: '$solvedProblemsSet' }
+        }}
+      ]);
+
+      if (submissionStats.length > 0) {
+        statsByClass[className] = {
+          ...submissionStats[0],
+          totalSubmissions: submissionStats[0].totalSubmissions || 0,
+          acceptedSubmissions: submissionStats[0].acceptedSubmissions || 0,
+          uniqueStudents: studentCount, // Dùng số từ User collection
+          solvedProblems: submissionStats[0].solvedProblems || 0
+        };
+      } else {
+        // Nếu chưa có submission, stats = 0 nhưng uniqueStudents = số học sinh thực
+        statsByClass[className] = {
+          totalSubmissions: 0,
+          acceptedSubmissions: 0,
+          uniqueStudents: studentCount,
+          solvedProblems: 0
+        };
+      }
+      
+      console.log(`📊 Class ${className}: students=${studentCount}, submissions=${statsByClass[className].totalSubmissions}`);
+    }
 
     res.json({ classes, stats: statsByClass, page: Number(page) });
   } catch (error) {

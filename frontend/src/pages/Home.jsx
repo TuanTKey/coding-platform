@@ -343,7 +343,7 @@ const Home = () => {
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute flex flex-col items-center gap-2 transform -translate-x-1/2 bottom-8 left-1/2 animate-bounce">
+        <div className="absolute flex flex-col items-center gap-2 transform -translate-x-1/2 bottom-8 left-1/2 animate-bounce hidden sm:flex">
           <span
             className={`text-sm font-semibold ${
               isDark ? "text-gray-400" : "text-gray-600"
@@ -459,6 +459,251 @@ const Home = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ STATISTICS SHOWCASE SECTION ============ */}
+      <section
+        className={`py-24 px-4 sm:px-6 lg:px-8 ${
+          isDark ? "bg-gradient-to-br from-slate-800 via-slate-700/50 to-slate-800" : "bg-gradient-to-br from-cyan-50 via-blue-50/50 to-purple-50"
+        }`}
+      >
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 text-center">
+            <h2
+              className={`text-4xl font-bold mb-4 ${
+                isDark ? "text-white" : "text-gray-900"
+              }`}
+            >
+              🎯 Thống Kê Toàn Diện
+            </h2>
+            <p
+              className={`text-lg ${
+                isDark ? "text-gray-400" : "text-gray-600"
+              }`}
+            >
+              Theo dõi tiến độ học tập và hiệu suất của bạn
+            </p>
+          </div>
+
+          {/* Stats Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {[
+              {
+                icon: BookOpen,
+                label: "Bài Tập Đã Giải",
+                value: "2,547",
+                trend: "+12% tháng này",
+                color: "cyan",
+              },
+              {
+                icon: Trophy,
+                label: "Cuộc Thi Tham Gia",
+                value: "48",
+                trend: "+5 cuộc thi",
+                color: "purple",
+              },
+              {
+                icon: Zap,
+                label: "Điểm Hiệu Suất",
+                value: "8,750",
+                trend: "+125 điểm",
+                color: "amber",
+              },
+              {
+                icon: TrendingUp,
+                label: "Xếp Hạng Toàn Cầu",
+                value: "1,234",
+                trend: "↑ 45 hạng",
+                color: "green",
+              },
+            ].map((card, idx) => {
+              const Icon = card.icon;
+              const colorMap = {
+                cyan: isDark
+                  ? "from-cyan-600/20 to-blue-600/20 border-cyan-500/30"
+                  : "from-cyan-100/50 to-blue-100/50 border-cyan-300/50",
+                purple: isDark
+                  ? "from-purple-600/20 to-pink-600/20 border-purple-500/30"
+                  : "from-purple-100/50 to-pink-100/50 border-purple-300/50",
+                amber: isDark
+                  ? "from-amber-600/20 to-orange-600/20 border-amber-500/30"
+                  : "from-amber-100/50 to-orange-100/50 border-amber-300/50",
+                green: isDark
+                  ? "from-green-600/20 to-emerald-600/20 border-green-500/30"
+                  : "from-green-100/50 to-emerald-100/50 border-green-300/50",
+              };
+
+              return (
+                <div
+                  key={idx}
+                  className={`p-6 rounded-2xl border transition-all duration-300 group hover:scale-105 hover:shadow-xl bg-gradient-to-br ${
+                    colorMap[card.color]
+                  } ${isDark ? "hover:border-cyan-400/50" : "hover:border-cyan-400"}`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div
+                      className={`p-3 rounded-lg transition-all group-hover:scale-110 ${
+                        card.color === "cyan"
+                          ? isDark
+                            ? "bg-cyan-500/30"
+                            : "bg-cyan-200/50"
+                          : card.color === "purple"
+                          ? isDark
+                            ? "bg-purple-500/30"
+                            : "bg-purple-200/50"
+                          : card.color === "amber"
+                          ? isDark
+                            ? "bg-amber-500/30"
+                            : "bg-amber-200/50"
+                          : isDark
+                          ? "bg-green-500/30"
+                          : "bg-green-200/50"
+                      }`}
+                    >
+                      <Icon
+                        className={
+                          card.color === "cyan"
+                            ? isDark
+                              ? "text-cyan-400"
+                              : "text-cyan-600"
+                            : card.color === "purple"
+                            ? isDark
+                              ? "text-purple-400"
+                              : "text-purple-600"
+                            : card.color === "amber"
+                            ? isDark
+                              ? "text-amber-400"
+                              : "text-amber-600"
+                            : isDark
+                            ? "text-green-400"
+                            : "text-green-600"
+                        }
+                        size={24}
+                      />
+                    </div>
+                    <span
+                      className={`text-xs font-bold px-2 py-1 rounded-lg ${
+                        card.color === "cyan"
+                          ? isDark
+                            ? "bg-cyan-500/20 text-cyan-300"
+                            : "bg-cyan-100 text-cyan-700"
+                          : card.color === "purple"
+                          ? isDark
+                            ? "bg-purple-500/20 text-purple-300"
+                            : "bg-purple-100 text-purple-700"
+                          : card.color === "amber"
+                          ? isDark
+                            ? "bg-amber-500/20 text-amber-300"
+                            : "bg-amber-100 text-amber-700"
+                          : isDark
+                          ? "bg-green-500/20 text-green-300"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {card.trend}
+                    </span>
+                  </div>
+                  <p
+                    className={`text-sm font-medium mb-2 ${
+                      isDark ? "text-gray-400" : "text-gray-600"
+                    }`}
+                  >
+                    {card.label}
+                  </p>
+                  <p
+                    className={`text-3xl font-bold transition-colors group-hover:text-cyan-400 ${
+                      isDark ? "text-white" : "text-gray-900"
+                    }`}
+                  >
+                    {card.value}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Detailed Stats Table */}
+          <div
+            className={`rounded-2xl overflow-hidden border transition-all duration-300 ${
+              isDark
+                ? "bg-gradient-to-br from-slate-800 to-slate-700/80 border-slate-600/50"
+                : "bg-white border-slate-200/50"
+            }`}
+          >
+            <div
+              className={`p-8 border-b ${
+                isDark
+                  ? "border-slate-600/50 bg-slate-800/50"
+                  : "border-slate-200/50 bg-slate-50/50"
+              }`}
+            >
+              <h3
+                className={`text-2xl font-bold flex items-center gap-3 ${
+                  isDark ? "text-white" : "text-gray-900"
+                }`}
+              >
+                <BarChart3 size={28} className={isDark ? "text-cyan-400" : "text-cyan-600"} />
+                Top Lập Trình Viên Trên Nền Tảng
+              </h3>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr
+                    className={`border-b ${
+                      isDark
+                        ? "border-slate-600/50 bg-slate-800/30"
+                        : "border-slate-200/50 bg-slate-100/50"
+                    }`}
+                  >
+                    <th className={`px-8 py-4 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Hạng</th>
+                    <th className={`px-8 py-4 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Tên</th>
+                    <th className={`px-8 py-4 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Bài Giải</th>
+                    <th className={`px-8 py-4 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>Điểm</th>
+                    <th className={`px-8 py-4 text-left font-semibold ${isDark ? "text-gray-300" : "text-gray-700"}`}>AC Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topUsers.length > 0 ? (
+                    topUsers.slice(0, 5).map((user, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b transition-colors ${
+                          isDark
+                            ? "border-slate-700/30 hover:bg-slate-800/50"
+                            : "border-slate-200/50 hover:bg-slate-50"
+                        }`}
+                      >
+                        <td className={`px-8 py-4 font-bold ${isDark ? "text-cyan-400" : "text-cyan-600"}`}>
+                          {idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `#${idx + 1}`}
+                        </td>
+                        <td className={`px-8 py-4 ${isDark ? "text-white" : "text-gray-900"}`}>
+                          {user.username || "Anonymous"}
+                        </td>
+                        <td className={`px-8 py-4 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
+                          {user.solvedProblems || 0}
+                        </td>
+                        <td className={`px-8 py-4 font-semibold ${isDark ? "text-cyan-400" : "text-cyan-600"}`}>
+                          {user.score || 0}
+                        </td>
+                        <td className={`px-8 py-4 ${isDark ? "text-green-400" : "text-green-600"}`}>
+                          {((user.solvedProblems / (user.totalSubmissions || 1)) * 100).toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="5" className={`px-8 py-8 text-center ${isDark ? "text-gray-500" : "text-gray-400"}`}>
+                        Đang tải dữ liệu...
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </section>

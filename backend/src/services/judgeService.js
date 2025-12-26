@@ -122,6 +122,18 @@ class JudgeService {
   }
 
   async judgeTraditional(submissionId, problem, testCases, code, language) {
+    // Check if test cases exist
+    if (!testCases || testCases.length === 0) {
+      console.log('⚠️  Không có test cases - submission sẽ ở trạng thái pending');
+      await Submission.findByIdAndUpdate(submissionId, {
+        status: 'pending',
+        errorMessage: 'Đang chờ giáo viên thêm test cases để chấm bài',
+        testCasesPassed: 0,
+        totalTestCases: 0
+      });
+      return;
+    }
+
     const langConfig = LANGUAGE_CONFIG[language];
     if (!langConfig) {
       await this.updateSubmissionError(submissionId, 'Unsupported language: ' + language);
@@ -181,13 +193,15 @@ class JudgeService {
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
       console.log(`🧪 Running test case ${i + 1}/${testCases.length}...`);
+      console.log(`   📥 Input: ${testCase.input.substring(0, 100)}`);
+      console.log(`   📤 Expected: ${testCase.expectedOutput.substring(0, 100)}`);
 
       const result = await this.runTestCase(
         langConfig.runCmd(filename),
         tempDir,
         testCase.input,
         testCase.expectedOutput,
-        problem.timeLimit || 2000,
+        problem.timeLimit || 1800000,
         problem.memoryLimit || 256
       );
 
@@ -272,9 +286,11 @@ class JudgeService {
   async runTestCase(cmd, cwd, input, expectedOutput, timeLimit) {
     return new Promise((resolve) => {
       const start = Date.now();
+      console.log(`   ⏱️  Timeout: ${timeLimit}ms`);
       const child = exec(cmd, { cwd, timeout: timeLimit, windowsHide: true }, (error, stdout, stderr) => {
         const executionTime = Date.now() - start;
         if (error) {
+          console.log(`   🔴 Error: ${error.code}, killed: ${error.killed}, signal: ${error.signal}`);
           if (error.killed || error.signal === 'SIGTERM') {
             return resolve({ status: 'time_limit', time: executionTime });
           }

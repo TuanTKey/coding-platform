@@ -15,6 +15,37 @@ router.put('/me', authenticate, userController.updateProfile);
 
 // Class management routes
 router.get('/classes/all', userController.getClasses);
+router.get('/classes/teacher', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const teacher = await User.findById(userId).lean();
+    
+    if (!teacher) return res.status(404).json({ error: 'User not found' });
+    if (teacher.role !== 'teacher' && teacher.role !== 'admin') {
+      return res.status(403).json({ error: 'Only teachers and admins' });
+    }
+
+    const Class = require('../models/Class');
+    const teacherClasses = teacher.teacherClasses || [];
+    const objectIds = teacherClasses.filter(tc => /^[0-9a-fA-F]{24}$/.test(tc));
+    const names = teacherClasses.filter(tc => !(/^[0-9a-fA-F]{24}$/.test(tc)));
+    
+    const classQuery = { $or: [] };
+    if (objectIds.length) classQuery.$or.push({ _id: { $in: objectIds } });
+    if (names.length) classQuery.$or.push({ name: { $in: names } });
+    
+    const classes = classQuery.$or.length 
+      ? await Class.find(classQuery).select('name').lean()
+      : [];
+    
+    const classNames = classes.map(c => c.name).concat(names).filter(Boolean);
+    
+    res.json({ classes: classNames });
+  } catch (error) {
+    console.error('Get teacher classes error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 router.get('/class/:class/users', authenticate, userController.getUsersByClass);
 router.get('/class/:class/statistics', authenticate, userController.getClassStatistics);
 
