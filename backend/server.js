@@ -1,10 +1,12 @@
+const express = require("express");
+const app = express();
+
 // Friendly root route
 app.get('/', (req, res) => {
   res.json({
     message: 'Welcome to Coding Platform API! Visit /api/health for status.'
   });
 });
-const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
