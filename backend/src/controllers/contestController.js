@@ -53,7 +53,13 @@ exports.getContestById = async (req, res) => {
       return res.status(404).json({ error: 'Contest not found' });
     }
 
-    res.json({ contest });
+    // Xác định user đã đăng ký chưa
+    let registered = false;
+    if (req.user && req.user.id) {
+      registered = contest.participants.map(p => p.toString()).includes(req.user.id.toString());
+    }
+
+    res.json({ contest, registered });
   } catch (error) {
     console.error('Get contest error:', error);
     res.status(500).json({ error: 'Server error' });
@@ -162,8 +168,8 @@ exports.registerContest = async (req, res) => {
       return res.status(404).json({ error: 'Contest not found' });
     }
 
-    // Check if already registered
-    if (contest.participants.includes(req.user.id)) {
+    // Check if already registered (so sánh ObjectId bằng toString)
+    if (contest.participants.map(p => p.toString()).includes(req.user.id.toString())) {
       return res.status(400).json({ error: 'Already registered' });
     }
 

@@ -183,12 +183,21 @@ exports.getAllSubmissions = async (req, res) => {
       .populate('contestId', 'title')
       .sort({ createdAt: -1 })
       .limit(limit * 1)
-      .skip((page - 1) * limit);
+      .skip((page - 1) * limit)
+      .lean();
+
+    // Map lại cho frontend dễ dùng
+    const mapped = submissions.map(s => ({
+      ...s,
+      user: s.userId,
+      problem: s.problemId,
+      contest: s.contestId,
+    }));
 
     const count = await Submission.countDocuments();
 
     res.json({
-      submissions,
+      submissions: mapped,
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       total: count

@@ -70,10 +70,29 @@ exports.getUserProfile = async (req, res) => {
 };
 
 // Get current user profile
+// Get current user profile with statistics
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json({ user });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Thống kê
+    const solvedProblems = await Submission.distinct('problemId', {
+      userId: user._id,
+      status: 'accepted'
+    });
+    const submissions = await Submission.countDocuments({ userId: user._id });
+    const Contest = require('../models/Contest');
+    const contestsJoined = await Contest.countDocuments({ participants: user._id });
+
+    res.json({
+      ...user.toObject(),
+      stats: {
+        solvedProblems: solvedProblems.length,
+        submissions,
+        contestsJoined
+      }
+    });
   } catch (error) {
     console.error('Get current user error:', error);
     res.status(500).json({ error: 'Server error' });
